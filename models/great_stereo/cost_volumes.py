@@ -198,14 +198,14 @@ class ExcitiveAttentionVolume(nn.Module):
         return match_left, match_right, ea_volume, init_disp
 
 
-class CostVolume:
+class CostVolumeSampler:
     def __init__(self, left_feat: torch.Tensor, right_feat: torch.Tensor, num_levels: int=4, radius: int=4):
         self.num_levels = num_levels
         self.radius = radius
         self.cost_volume_pyramid = []
 
         # All pairs correlation.
-        cost_volume = CostVolume.compute_cost_volume(left_feat, right_feat)
+        cost_volume = CostVolumeSampler.compute_cost_volume(left_feat, right_feat)
 
         batch, h1, w1, _, w2 = cost_volume.shape
         cost_volume = cost_volume.reshape(batch * h1 * w1, 1, 1, w2)
