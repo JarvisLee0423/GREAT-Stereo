@@ -1,0 +1,14 @@
+python3 stereo_evaluator.py --name great-raft-stereo \
+--logdir ./experiments/great_stereo/raft-based/sceneflow/baseline \
+--dataset sceneflow \
+--dataset_root ~/Workspaces/Researches/Datasets/SceneFlow \
+--restore_ckpt ./greatraftstereo-sceneflow.pth \
+--eval_mode metric \
+--eval_iters 32 \
+--cv_levels 4 \
+--cv_radius 4 \
+--n_downsample 2 \
+--n_gru_layers 3 \
+--channels 128 128 128 \
+--context_norm batch \
+--max_disp 192
