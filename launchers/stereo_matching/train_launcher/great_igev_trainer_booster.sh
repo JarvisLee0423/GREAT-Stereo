@@ -1,0 +1,23 @@
+python3 stereo_trainer.py --name great-igev-stereo \
+--logdir ./experiments/great_stereo/igev-based/booster/baseline \
+--restore_ckpt ./great-igev-stereo.pth \
+--optimizer adamw \
+--batch_size 8 \
+--train_datasets booster \
+--train_datasets_root ~/Workspaces/Researches/Datasets/ \
+--lr 0.0002 \
+--num_steps 100000 \
+--image_size 384 768 \
+--train_iters 22 \
+--wdecay 0.00001 \
+--eval_iters 32 \
+--cv_levels 2 \
+--cv_radius 4 \
+--n_downsample 2 \
+--n_gru_layers 3 \
+--channels 128 128 128 \
+--context_norm batch \
+--max_disp 768 \
+--spatial_scale -0.2 0.4 \
+--saturation_range 0 1.4 \
+--mixed_precision
