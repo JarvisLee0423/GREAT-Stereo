@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import List, Tuple, Union
 from utils.utils import autocast, upflow8, coords_grid
-from models.great_stereo.cost_volumes import CostVolume
+from models.great_stereo.cost_volumes import CostVolumeSampler
 from models.great_stereo.updaters import BasicRAFTMultiUpdateBlock
 from models.great_stereo.positions import PositionalEmbeddingCosine2D
 from models.great_stereo.transformers import TransformerFeatureRefiner
@@ -102,7 +102,7 @@ class GREATStereo(nn.Module):
             # Rather than running the GRU's conv layers on the context features multiple times, we do it once at the beginning.
             inp_list = [list(conv(i).split(split_size=conv.out_channels // 3, dim=1)) for i, conv in zip(inp_list, self.context_zqr_convs)]
         
-        cv_block = CostVolume
+        cv_block = CostVolumeSampler
         feat_batch, _, feat_h, feat_w = match_left.shape
         match_left, match_right = match_left.float(), match_right.float()
         cv_fn = cv_block(match_left, match_right, radius=self.args.cv_radius, num_levels=self.args.cv_levels)
