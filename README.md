@@ -42,7 +42,7 @@ Stereo matching achieves significant progress with iterative algorithms like RAF
 Qualitative results of GREAT-IGEV on the Scene Flow test set of occlusion (**Row 1**), textureless (**Row 2**), and repetitive texture (**Row 3**) regions.
 
 <div style="text-align: center">
-  <img src="demos/imgs/sota_comparison.jpg" alt="sota_comparison"></img>
+  <img src="demos/imgs/sota_comparison.jpg" alt="sota_comparison" width="1280" height="640"></img>
 </div>
 <div style="text-align: center">
   <img src="demos/imgs/sceneflow_result.jpg" alt="transferability"></img>
