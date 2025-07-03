@@ -1,8 +1,8 @@
-# :rocket: GREAT-Stereo (ICCV 2025) :rocket:
+# <a href="https://www.youtube.com/watch?v=u-UhFMGmXro" style="color: #FFFFFF; text-decoration: none;">:rocket: GREAT-Stereo (ICCV 2025) :rocket:</a>
 
 <p align="center"></p>
 <h2>🤗 Demo Results:</h2>
-<table align="center" width="100%" style="border-collapse: collapse; margin: 20px 0;">
+<table align="center" width="100%" style="border-collapse: collapse; margin: 20px 0; border: none; border-spacing: 0;">
   <tr>
     <td align="center" width="33%">
       <a href="https://www.youtube.com/watch?v=u-UhFMGmXro">
