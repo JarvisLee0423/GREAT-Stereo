@@ -5,21 +5,15 @@
 <table align="center" width="100%" style="border-collapse: collapse; margin: 20px 0;">
   <tr>
     <td align="center" width="33%">
-      <a href="https://www.youtube.com/watch?v=u-UhFMGmXro">
-        <img src="demos/imgs/raft_cover.png" width="100%" alt="RAFT-Demo">
-      </a>
+      <video src="demos/videos/raft.mp4" controls></video>
       <div style="margin-top: 8px; font-weight: bold;">RAFT Demo</div>
     </td>
     <td align="center" width="33%">
-      <a href="https://www.youtube.com/watch?v=u-UhFMGmXro">
-        <img src="demos/imgs/igev_cover.png" width="100%" alt="IGEV-Demo">
-      </a>
+      <video src="demos/videos/igev.mp4" controls></video>
       <div style="margin-top: 8px; font-weight: bold;">IGEV Demo</div>
     </td>
     <td align="center" width="33%">
-      <a href="https://www.youtube.com/watch?v=u-UhFMGmXro">
-        <img src="demos/imgs/selective_cover.png" width="100%" alt="Selective-Demo">
-      </a>
+      <video src="demos/videos/selective.mp4" controls></video>
       <div style="margin-top: 8px; font-weight: bold;">Selective Demo</div>
     </td>
   </tr>
