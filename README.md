@@ -1,29 +1,27 @@
-# <a href="https://www.youtube.com/watch?v=u-UhFMGmXro" style="color: #FFFFFF; text-decoration: none;">:rocket: GREAT-Stereo (ICCV 2025) :rocket:</a>
+# :rocket: GREAT-Stereo (ICCV 2025) :rocket:
 
 <p align="center"></p>
 <h2>🤗 Demo Results:</h2>
-<table align="center" width="100%" style="border-collapse: collapse; margin: 20px 0; border: none; border-spacing: 0;">
-  <tr>
-    <td align="center" width="33%" style="border: none; padding: 5;">
-      <a href="https://www.youtube.com/watch?v=u-UhFMGmXro">
-        <img src="demos/imgs/raft_cover.png" width="100%" alt="RAFT-Demo">
-      </a>
-      <div style="margin-top: 8px; font-weight: bold;">RAFT Demo</div>
-    </td>
-    <td align="center" width="33%" style="border: none; padding: 5;">
-      <a href="https://www.youtube.com/watch?v=u-UhFMGmXro">
-        <img src="demos/imgs/igev_cover.png" width="100%" alt="IGEV-Demo">
-      </a>
-      <div style="margin-top: 8px; font-weight: bold;">IGEV Demo</div>
-    </td>
-    <td align="center" width="33%" style="border: none; padding: 5;">
-      <a href="https://www.youtube.com/watch?v=u-UhFMGmXro">
-        <img src="demos/imgs/selective_cover.png" width="100%" alt="Selective-Demo">
-      </a>
-      <div style="margin-top: 8px; font-weight: bold;">Selective Demo</div>
-    </td>
-  </tr>
-</table>
+<div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 20px; margin: 20px 0;">
+  <div style="width: 30%; min-width: 200px; display: flex; flex-direction: column; align-items: center;">
+    <a href="https://www.youtube.com/watch?v=u-UhFMGmXro" style="display: block; width: 100%;">
+      <img src="demos/imgs/raft_cover.png" width="100%" alt="RAFT-Demo" style="border-radius: 4px;">
+    </a>
+    <div style="margin-top: 8px; font-weight: bold;">RAFT Demo</div>
+  </div>
+  <div style="width: 30%; min-width: 200px; display: flex; flex-direction: column; align-items: center;">
+    <a href="https://www.youtube.com/watch?v=u-UhFMGmXro" style="display: block; width: 100%;">
+      <img src="demos/imgs/igev_cover.png" width="100%" alt="IGEV-Demo" style="border-radius: 4px;">
+    </a>
+    <div style="margin-top: 8px; font-weight: bold;">IGEV Demo</div>
+  </div>
+  <div style="width: 30%; min-width: 200px; display: flex; flex-direction: column; align-items: center;">
+    <a href="https://www.youtube.com/watch?v=u-UhFMGmXro" style="display: block; width: 100%;">
+      <img src="demos/imgs/selective_cover.png" width="100%" alt="Selective-Demo" style="border-radius: 4px;">
+    </a>
+    <div style="margin-top: 8px; font-weight: bold;">Selective Demo</div>
+  </div>
+</div>
 <p></p>
 
 This repository contains the source code for our paper:
