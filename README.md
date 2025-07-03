@@ -5,15 +5,15 @@
 <table align="center" width="100%" style="border-collapse: collapse; margin: 20px 0;">
   <tr>
     <td align="center" width="33%">
-      <video src="demos/videos/raft.mp4" controls></video>
+      <img src="demos/videos/raft.gif" alt="RAFT_DEMO"></img>
       <div style="margin-top: 8px; font-weight: bold;">RAFT Demo</div>
     </td>
     <td align="center" width="33%">
-      <video src="demos/videos/igev.mp4" controls></video>
+      <img src="demos/videos/igev.gif" alt="IGEV_DEMO"></img>
       <div style="margin-top: 8px; font-weight: bold;">IGEV Demo</div>
     </td>
     <td align="center" width="33%">
-      <video src="demos/videos/selective.mp4" controls></video>
+      <img src="demos/videos/selective.gif" alt="SELECTIVE_DEMO"></img>
       <div style="margin-top: 8px; font-weight: bold;">Selective Demo</div>
     </td>
   </tr>
