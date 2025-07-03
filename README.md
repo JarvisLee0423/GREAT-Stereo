@@ -38,4 +38,4 @@ Qualitative results of GREAT-IGEV on the Scene Flow test set of occlusion (**Row
 
 ![sota_comparison](demos/imgs/sota_comparison.jpg)
 ![transferability](demos/imgs/sceneflow_result.jpg)
-Comparisons with state-of-the-art stereo methods on different public benchmarks and ablation study of the cross-model transferability of the proposed GREAT framework on the Scene FLow test set.
+Comparisons with state-of-the-art stereo methods on different public benchmarks and ablation study of the cross-model transferability of the proposed GREAT framework on the Scene Flow test set.
