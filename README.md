@@ -1,5 +1,5 @@
 # :rocket: GREAT-Stereo (ICCV 2025) :rocket:
-This repository contains the source code for our paper:
+This repository contains the source code for our paper.
 
 **Global Regulation and Excitation via Attention Tuning for Stereo Matching (GREAT-Stereo)**
 <a href="TBC">
@@ -108,14 +108,14 @@ pip install einops==0.8.1
 ./launchers/stereo_matching/test_launcher/great_igev_evaluator.sh
 ```
 
-4. (Optional) You can also change the `eval_mode` in the evaluation script to get different evaluation results:
+4. (Optional) You can also change the `eval_mode` in the evaluation script to get different evaluation results.
     - `metric` to generate evaluation quantity results (Default).
     - `pcgen` to generate the points cloud of predicted disparity for visualization.
     - `cvvis` to generate the visualization of the cost volume.
 
 ## :books: Training
 
-1. Change the following parameters in the script located at `launchers/stereo_matching/train_launcher/`
+1. Change the following parameters in the script located at `launchers/stereo_matching/train_launcher/`.
     - `logdir`
       - your/path/to/save/training/information
     - `train_datasets`
