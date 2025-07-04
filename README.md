@@ -102,13 +102,15 @@ pip install einops==0.8.1
       - your/path/to/corresponding/dataset
     - `restore_ckpt`
       - your/path/to/checkpoint
+    - `max_disp` (Optional)
+      - `768` for Middlebury and `192` for others
 
 3. Run the evaluation (e.g. Evaluation of GREAT-IGEV on Scene Flow test set).
 ```Shell
 ./launchers/stereo_matching/test_launcher/great_igev_evaluator.sh
 ```
 
-4. (Optional) You can also change the `eval_mode` in the evaluation script to get different evaluation results.
+1. (Optional) You can also change the `eval_mode` in the evaluation script to get different evaluation results.
     - `metric` to generate evaluation quantity results (Default).
     - `pcgen` to generate the points cloud of predicted disparity for visualization.
     - `cvvis` to generate the visualization of the cost volume.
