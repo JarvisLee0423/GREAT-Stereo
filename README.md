@@ -110,7 +110,7 @@ pip install einops==0.8.1
 ./launchers/stereo_matching/test_launcher/great_igev_evaluator.sh
 ```
 
-1. (Optional) You can also change the `eval_mode` in the evaluation script to get different evaluation results.
+4. (Optional) You can also change the `eval_mode` in the evaluation script to get different evaluation results.
     - `metric` to generate evaluation quantity results (Default).
     - `pcgen` to generate the points cloud of predicted disparity for visualization.
     - `cvvis` to generate the visualization of the cost volume.
