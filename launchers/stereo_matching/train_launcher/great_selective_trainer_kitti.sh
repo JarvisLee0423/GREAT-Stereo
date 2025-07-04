@@ -20,4 +20,5 @@ python3 stereo_trainer.py --name great-selective-stereo \
 --max_disp 192 \
 --spatial_scale -0.2 0.4 \
 --saturation_range 0 1.4 \
+--precision_dtype float16 \
 --mixed_precision

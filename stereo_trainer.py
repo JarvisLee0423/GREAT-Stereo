@@ -42,7 +42,8 @@ def train(args: argparse.Namespace) -> str:
         module_name = exp_name
     module = getattr(importlib.import_module(f"models.{module_name}.{exp_name}"), model_name)
     model = nn.DataParallel(module(args))
-    print(f"Parameter Count: {count_parameters(model)}.")
+    print(f"All Parameter Count: {count_all_parameters(model)}.")
+    print(f"Grad Required Parameter Count: {count_grad_required_parameters(model)}.")
 
     # Save the training settings.
     args_dict = vars(args)
@@ -52,7 +53,8 @@ def train(args: argparse.Namespace) -> str:
     
     # Save the model settings.
     with open(args.logdir + "/model_settings.txt", "w") as file:
-        file.write("Model Parameters: " + str(count_parameters(model)) + "\n")
+        file.write("All Model Parameters: " + str(count_all_parameters(model)) + "\n")
+        file.write("Grad Required Model Parameters: " + str(count_grad_required_parameters(model)) + "\n")
         file.write(model.module.__str__())
 
     # Get training data.
@@ -184,7 +186,10 @@ if __name__ == "__main__":
     parser.add_argument("--name", default="raft-stereo", help="name your experiment.")
     parser.add_argument("--restore_ckpt", default=None, help="load the weights from a specific checkpoint.")
     parser.add_argument("--mixed_precision", default=True, action="store_true", help="use mixed precision.")
+    parser.add_argument("--precision_dtype", default="float16", choices=["float16", "bfloat16", "float32"], help="choose mixed precision type: float16, bfloat16 or float32.")
     parser.add_argument("--logdir", default="./checkpoints/sceneflow", help="the directory to save logs and checkpoints.")
+    parser.add_argument("--backbone_type", required=False, help="the type of the backbone used in the network ('MobileNetV2' or 'ResidualNet' for default if not set this argument explicitly).")
+    parser.add_argument("--backbone_ckpt", required=False, help="the path of the backbone checkpoint.")
 
     # Training parameters.
     parser.add_argument("--optimizer", type=str, default="adamw", help="name of the optimizer used during training.")

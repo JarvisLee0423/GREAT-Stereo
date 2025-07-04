@@ -77,11 +77,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--name", default="great-igev-stereo", help="name your experiment.")
     parser.add_argument('--restore_ckpt', help="restore checkpoint", default='./pretrained_models/eth3d/eth3d_finetune.pth')
+    parser.add_argument("--backbone_type", required=False, help="the type of the backbone used in the network ('MobileNetV2' or 'ResidualNet' for default if not set this argument explicitly).")
+    parser.add_argument("--backbone_ckpt", required=False, help="the path of the backbone checkpoint.")
     parser.add_argument('--save_pfm', action='store_true', default=True, help='save output as pfm file')
     parser.add_argument('-l', '--left_imgs', help="path to all first (left) frames", default="~/Workspaces/Researches/Datasets/ETH3D/two_view_*/*/im0.png")
     parser.add_argument('-r', '--right_imgs', help="path to all second (right) frames", default="~/Workspaces/Researches/Datasets/ETH3D/two_view_*/*/im1.png")
     parser.add_argument('--output_directory', help="directory to save output", default="./experiments/great_stereo/igev-based/eth3d/finetune/great+full+eth3d+finetune/eval/low_res_two_view")
     parser.add_argument('--mixed_precision', action='store_true', help='use mixed precision')
+    parser.add_argument("--precision_dtype", default="float16", choices=["float16", "bfloat16", "float32"], help="choose mixed precision type: float16, bfloat16 or float32.")
     parser.add_argument('--valid_iters', type=int, default=32, help='number of flow-field updates during forward pass')
 
     # Architecture choices

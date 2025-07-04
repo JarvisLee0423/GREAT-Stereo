@@ -80,7 +80,7 @@ class GREATStereo(nn.Module):
         right_img = (2 * (right_img / 255.0) - 1.0).contiguous()
 
         # Run the context network.
-        with autocast(enabled=self.args.mixed_precision):
+        with autocast(enabled=self.args.mixed_precision, dtype=getattr(torch, self.args.precision_dtype, torch.float16)):
             if self.args.shared_backbone:
                 *cnet_list, x = self.cnet(torch.cat((left_img, right_img), dim=0), dual_inp=True, num_layers=self.args.n_gru_layers)
                 left_feat, right_feat = self.conv2(x).split(dim=0, split_size=x.shape[0] // 2)
@@ -117,7 +117,7 @@ class GREATStereo(nn.Module):
             coords1 = coords1.detach()
             cv = cv_fn(coords1) # Index correlation volume.
             flow = coords1 - coords0
-            with autocast(enabled=self.args.mixed_precision):
+            with autocast(enabled=self.args.mixed_precision, dtype=getattr(torch, self.args.precision_dtype, torch.float16)):
                 if self.args.n_gru_layers == 3 and self.args.slow_fast_gru: # Update low-res GRU.
                     net_list = self.update_block(net_list, inp_list, iter16=True, iter08=False, iter04=False, update=False)
                 if self.args.n_gru_layers >= 2 and self.args.slow_fast_gru: # Update low-res GRU and mid-res GRU.

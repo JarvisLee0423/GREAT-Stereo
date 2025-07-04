@@ -77,6 +77,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--name", default="great-igev-stereo", help="name your experiment.")
     parser.add_argument('--restore_ckpt', help="restore checkpoint", default='./pretrained_models/kitti/kitti15.pth')
+    parser.add_argument("--backbone_type", required=False, help="the type of the backbone used in the network ('MobileNetV2' or 'ResidualNet' for default if not set this argument explicitly).")
+    parser.add_argument("--backbone_ckpt", required=False, help="the path of the backbone checkpoint.")
     parser.add_argument('--save_png', action='store_true', default=True, help='save output as gray images')
     parser.add_argument('--save_numpy', action='store_true', help='save output as numpy arrays')
     parser.add_argument('-l', '--left_imgs', help="path to all first (left) frames", default="~/Workspaces/Researches/Datasets/KITTI/2015/data_scene_flow/testing/image_2/*_10.png")
@@ -86,6 +88,7 @@ if __name__ == '__main__':
     parser.add_argument('--output_directory', help="directory to save output", default="./experiments/great_stereo/igev-based/kitti/finetune/2015/great+full+kitti/eval/disp_0")
     # parser.add_argument('--output_directory', help="directory to save output", default="./experiments/great_stereo/igev-based/kitti/finetune/2012/great+full+kitti/eval/disp_0")
     parser.add_argument('--mixed_precision', action='store_true', help='use mixed precision')
+    parser.add_argument("--precision_dtype", default="float16", choices=["float16", "bfloat16", "float32"], help="choose mixed precision type: float16, bfloat16 or float32.")
     parser.add_argument('--valid_iters', type=int, default=32, help='number of flow-field updates during forward pass')
 
     # Architecture choices

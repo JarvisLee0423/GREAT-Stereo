@@ -18,7 +18,10 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", help="dataset for evaluation", default="sceneflow", choices=["eth3d", "kitti", "sceneflow"] + [f"middlebury_{s}" for s in "FHQ"])
     parser.add_argument("--dataset_root", help="dataset root for evaluation", default="/data/sceneflow/")
     parser.add_argument("--restore_ckpt", default=None, help="load the weights from a specific checkpoint.")
+    parser.add_argument("--backbone_type", required=False, help="the type of the backbone used in the network ('MobileNetV2' or 'ResidualNet' for default if not set this argument explicitly).")
+    parser.add_argument("--backbone_ckpt", required=False, help="the path of the backbone checkpoint.")
     parser.add_argument("--mixed_precision", default=False, action="store_true", help="use mixed precision.")
+    parser.add_argument("--precision_dtype", default="float16", choices=["float16", "bfloat16", "float32"], help="choose mixed precision type: float16, bfloat16 or float32.")
     parser.add_argument("--eval_mode", default="metric", choices=["metric", "sequence", "cvvis", "pcgen"], help="evaluation mode.")
     parser.add_argument("--eval_iters", type=int, default=32, help="number of disparity field updates during forward pass.")
 
@@ -63,7 +66,7 @@ if __name__ == "__main__":
     model.cuda()
     model.eval()
 
-    print(f"The model has {format(count_parameters(model) / 1e6, '.2f')}M learnable parameters.")
+    print(f"The model has {format(count_all_parameters(model) / 1e6, '.2f')}M learnable parameters.")
 
     if args.eval_mode == "metric":
         if args.dataset == "eth3d":

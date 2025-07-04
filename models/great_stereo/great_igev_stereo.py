@@ -69,7 +69,7 @@ class GREATStereo(nn.Module):
                 module.eval()
     
     def upsample_disp(self, disp: torch.Tensor, mask_feat_4: torch.Tensor, stem_2x: torch.Tensor) -> torch.Tensor:
-        with autocast(enabled=self.args.mixed_precision):
+        with autocast(enabled=self.args.mixed_precision, dtype=getattr(torch, self.args.precision_dtype, torch.float16)):
             xspx = self.spx_2_gru(mask_feat_4, stem_2x)
             spx_pred = self.spx_gru(xspx)
             spx_pred = F.softmax(spx_pred, 1)
@@ -83,7 +83,7 @@ class GREATStereo(nn.Module):
         left_img = (2 * (left_img / 255.0) - 1.0).contiguous()
         right_img = (2 * (right_img / 255.0) - 1.0).contiguous()
 
-        with autocast(enabled=self.args.mixed_precision):
+        with autocast(enabled=self.args.mixed_precision, dtype=getattr(torch, self.args.precision_dtype, torch.float16)):
             feat_left = self.feature(left_img)
             feat_right = self.feature(right_img)
             stem_2x = self.stem_2(left_img)
@@ -118,7 +118,7 @@ class GREATStereo(nn.Module):
         for iter in range(iters):
             disp = disp.detach()
             geo_feat = cv_fn(disp, coords)
-            with autocast(enabled=self.args.mixed_precision):
+            with autocast(enabled=self.args.mixed_precision, dtype=getattr(torch, self.args.precision_dtype, torch.float16)):
                 if self.args.n_gru_layers == 3 and self.args.slow_fast_gru: # Update low-res ConvGRU.
                     net_list = self.update_block(net_list, inp_list, iter16=True, iter08=False, iter04=False, update=False)
                 if self.args.n_gru_layers >= 2 and self.args.slow_fast_gru: # Update low-res ConvGRU and mid-res ConvGRU.

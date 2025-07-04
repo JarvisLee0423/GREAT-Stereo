@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from typing import Any, List, Tuple, Union
+from utils.utils import autocast
 
 
 def pool2x(inputs: torch.Tensor) -> torch.Tensor:
@@ -14,8 +15,16 @@ def pool4x(inputs: torch.Tensor) -> torch.Tensor:
 
 
 def interp(inputs: torch.Tensor, dest: torch.Tensor) -> torch.Tensor:
+    original_dtype = inputs.dtype
+    inputs_fp32 = inputs.float()
     interp_args = {"mode": "bilinear", "align_corners": True}
-    return F.interpolate(inputs, dest.shape[2:], **interp_args)
+    with autocast(enabled=False):
+        output_fp32 = F.interpolate(inputs_fp32, dest.shape[2:], **interp_args)
+    if original_dtype != torch.float32:
+        output = output_fp32.to(original_dtype)
+    else:
+        output = output_fp32
+    return output
 
 
 class DispHead(nn.Module):

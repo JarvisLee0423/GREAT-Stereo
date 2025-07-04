@@ -11,7 +11,11 @@ from utils.utils import autocast, disp_warp, InputPadder
 from utils.stereo_matching.data_utils.datasets import *
 
 
-def count_parameters(model: nn.Module) -> Union[int, float]:
+def count_all_parameters(model: nn.Module) -> Union[int, float]:
+    return sum(param.numel() for param in model.parameters())
+
+
+def count_grad_required_parameters(model: nn.Module) -> Union[int, float]:
     return sum(param.numel() for param in model.parameters() if param.requires_grad)
 
 
