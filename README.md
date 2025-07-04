@@ -142,12 +142,12 @@ For submission to the KITTI benchmark (e.g. GREAT-IGEV).
 python3 save_disp_kitti.py --name great-igev-stereo --restore_ckpt your/path/to/checkpoint --left_imgs your/path/to/left/imgs --right_imgs your/path/to/right/imgs --output_directory your/path/to/save/submission/results
 ```
 
-For submission to the ETH3D benchmark.
+For submission to the ETH3D benchmark (e.g. GREAT-IGEV).
 ```Shell
 python3 save_disp_eth3d.py --name great-igev-stereo --restore_ckpt your/path/to/checkpoint --left_imgs your/path/to/left/imgs --right_imgs your/path/to/right/imgs --output_directory your/path/to/save/submission/results
 ```
 
-For submission to the Middlebury benchmark.
+For submission to the Middlebury benchmark (e.g. GREAT-IGEV).
 ```Shell
 python3 save_disp_middlebury.py --name great-igev-stereo --restore_ckpt your/path/to/checkpoint --left_imgs your/path/to/left/imgs --right_imgs your/path/to/right/imgs --output_directory your/path/to/save/submission/results
 ```
