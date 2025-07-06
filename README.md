@@ -167,4 +167,4 @@ TBC
 ```
 
 ## Acknowledgements
-TBC
+This project is based on [RAFT-Stereo](https://github.com/princeton-vl/RAFT-Stereo), [IGEV-Stereo](https://github.com/gangweix/IGEV), and [Selective-Stereo](https://github.com/Windsrain/Selective-Stereo). Meanwhile, the core attention modules of this project are modified from [CoEx](https://github.com/antabangun/coex), [VOLO](https://github.com/sail-sg/volo), and [Swin-Transformer](https://github.com/microsoft/Swin-Transformer). We thank the original authors for their excellent work.
