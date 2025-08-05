@@ -80,6 +80,7 @@ pip install matplotlib==3.7.5
 pip install timm==0.5.4
 pip install numpy==1.24.1
 pip install einops==0.8.1
+pip install open3d==0.19.0
 ```
 
 ## :floppy_disk: Required Data
