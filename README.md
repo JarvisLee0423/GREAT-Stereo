@@ -1,9 +1,10 @@
 # :rocket: GREAT-Stereo (ICCV 2025) :rocket:
 This repository contains the source code for our paper.
+[Paper](https://arxiv.org/abs/2509.15891) | [YouTube](https://youtu.be/ODBqYQIXTBA)
 
 **Global Regulation and Excitation via Attention Tuning for Stereo Matching (GREAT-Stereo)**
-<a href="TBC">
-  <img src="https://img.shields.io/badge/arXiv-TBC-b31b1b?logo=arxiv" alt='arxiv'>
+<a href="https://arxiv.org/abs/2509.15891">
+  <img src="https://img.shields.io/badge/arXiv-2509.15891-b31b1b?logo=arxiv" alt='arxiv'>
 </a>
 
 Jiahao LI, Xinhong Chen, Zhengmin JIANG, Qian Zhou, Yung-Hui Li, Jianping Wang
@@ -164,7 +165,16 @@ python3 save_disp_middlebury.py --name great-igev-stereo --restore_ckpt your/pat
 
 If you find our works useful in your research, please consider citing our paper.
 ```bibtex
-TBC
+# This is the temporary citation code from arxiv.
+@misc{li2025globalregulationexcitationattention,
+      title={Global Regulation and Excitation via Attention Tuning for Stereo Matching}, 
+      author={Jiahao Li and Xinhong Chen and Zhengmin Jiang and Qian Zhou and Yung-Hui Li and Jianping Wang},
+      year={2025},
+      eprint={2509.15891},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2509.15891}, 
+}
 ```
 
 ## Acknowledgements
