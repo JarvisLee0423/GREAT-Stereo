@@ -1,5 +1,6 @@
 # :rocket: GREAT-Stereo (ICCV 2025) :rocket:
 This repository contains the source code for our paper.
+
 [Paper](https://arxiv.org/abs/2509.15891) | [YouTube](https://youtu.be/ODBqYQIXTBA)
 
 **Global Regulation and Excitation via Attention Tuning for Stereo Matching (GREAT-Stereo)**
