@@ -4,8 +4,8 @@ This repository contains the source code for our paper.
 [Paper](https://openaccess.thecvf.com/content/ICCV2025/papers/Li_Global_Regulation_and_Excitation_via_Attention_Tuning_for_Stereo_Matching_ICCV_2025_paper.pdf) | [Paper Page](https://iccv.thecvf.com/virtual/2025/poster/1430) | [YouTube](https://youtu.be/ODBqYQIXTBA)
 
 **Global Regulation and Excitation via Attention Tuning for Stereo Matching (GREAT-Stereo)**
-<a href="https://arxiv.org/abs/2509.15891">
-  <img src="https://openaccess.thecvf.com/content/ICCV2025/papers/Li_Global_Regulation_and_Excitation_via_Attention_Tuning_for_Stereo_Matching_ICCV_2025_paper.pdf" alt='arxiv'>
+<a href="https://openaccess.thecvf.com/content/ICCV2025/papers/Li_Global_Regulation_and_Excitation_via_Attention_Tuning_for_Stereo_Matching_ICCV_2025_paper.pdf">
+  <img src="https://img.shields.io/badge/arXiv-2509.15891-b31b1b?logo=arxiv" alt='arxiv'>
 </a>
 
 Jiahao LI, Xinhong Chen, Zhengmin JIANG, Qian Zhou, Yung-Hui Li, Jianping Wang
