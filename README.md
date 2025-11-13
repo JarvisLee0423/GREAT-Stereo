@@ -34,6 +34,8 @@ Stereo matching achieves significant progress with iterative algorithms like RAF
 ## :new: Solid Version of GREAT-Stereo
 We now propose a solid and robust version of our GREAT Framework, which obtains better performance on the SceneFlow and public KITTI 2012/2015 benchmarks, especially in ill-posed regions like Occlusion. Meanwhile, the Foundation-Model version of our GREAT-IGEV also obtains comparable performance with the current SOTA Foundation-Model-based architectures.
 
+This solid and robuts version of GREAT-Stereo is stored in GREATEN-Stereo folder.
+
 **Our main modifications are:**
 - We simplify the implementation of Volume Attention.
 - We extend the application of Spatial Attention.
