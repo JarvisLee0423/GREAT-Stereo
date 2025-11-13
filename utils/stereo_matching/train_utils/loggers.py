@@ -19,7 +19,10 @@ class Logger:
     
     def print_training_status(self) -> None:
         metrics_data = []
-        training_str = "[{:6d}, {:10.7f}] ".format(self.total_steps + 1, self.scheduler.get_last_lr()[0])
+        if "depthany" in self.args.name or "monster" in self.args.name:
+            training_str = "[{:6d}, {:10.7f}, {:10.7f}] ".format(self.total_steps + 1, self.scheduler.get_last_lr()[0], self.scheduler.get_last_lr()[1])
+        else:
+            training_str = "[{:6d}, {:10.7f}] ".format(self.total_steps + 1, self.scheduler.get_last_lr()[0])
         for key in sorted(self.running_loss.keys()):
             line = key + f": {round(self.running_loss[key] / Logger.SUM_FREQ, 4)}"
             metrics_data.append(line)
@@ -27,6 +30,8 @@ class Logger:
 
         # Print the training status.
         logging.info(f"Training Metrics ({self.total_steps}): {training_str + metrics_str}")
+        with open(self.args.logdir + "/training_settings.txt", "a") as file:
+            file.write(f"Training Metrics ({self.total_steps}): {training_str + metrics_str}\n")
 
         if self.writer is None:
             self.writer = SummaryWriter(log_dir=self.args.logdir)
