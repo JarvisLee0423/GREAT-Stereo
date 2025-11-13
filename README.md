@@ -24,6 +24,445 @@ Stereo matching achieves significant progress with iterative algorithms like RAF
 - We introduce Spatial (SA), Matching (MA), and Volume (VA) Attentions, designed to mitigate ambiguities in ill-posed regions with global context information.
 - Our method outperforms existing published methods on public leaderboards such as SceneFlow, KITTI, ETH3D, and Middlebury, with especially significant improvements in ill-posed regions.
 
+## :white_check_mark: To Do List
+- [ ] The real-time version of the GREAT Framwork.
+- [ ] The gpu-memory-friendly implementation of the Matching Attention.
+- [x] The Foundation-Model-based experiments.
+- [x] The solid and robust version of the GREAT Framwork.
+- [x] The accelerate training and evaluating pipeline. 
+
+## :new: Solid Version of GREAT-Stereo
+We now propose a solid and robust version of our GREAT Framework, which obtains better performance on the SceneFlow and public KITTI 2012/2015 benchmarks, especially in ill-posed regions like Occlusion. Meanwhile, the Foundation-Model version of our GREAT-IGEV also obtains comparable performance with the current SOTA Foundation-Model-based architectures.
+
+**Our main modifications are:**
+- We simplify the implementation of Volume Attention.
+- We extend the application of Spatial Attention.
+- We remove the redundant implementation of receptive augmentation.
+- We modify the cost volume construction pipeline with combined cost volume.
+- We implement Foundation-Model (DepthAny) based GREAT-IGEV by using the implementation in [Monster](https://github.com/Junda24/MonSter) and conduct the Foundation-Model-based experiments.
+- We accelerate the training and evaluation with DistributedDataParallel settings.
+
+**The benchmark results and corresponding checkpoints are:**
+<p align="center"></p>
+<table style="border-collapse: collapse; width: 100%;">
+  <tr>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px; vertical-align: middle;" rowspan="2">Models</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;" colspan="6">SceneFlow</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;" colspan="4">KITTI2012</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;" colspan="4">KITTI2015</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px; vertical-align: middle;" rowspan="2"">Params</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px; vertical-align: middle;" rowspan="2"">Run Time</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px; vertical-align: middle;" rowspan="2"">Checkpoints</th>
+  </tr>
+  <tr>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px; font-weight: bold">EPE</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px; font-weight: bold">D3</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px; font-weight: bold">Occ-EPE</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px; font-weight: bold">Occ-D3</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px; font-weight: bold">Non-Occ-EPE</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px; font-weight: bold">Non-Occ-D3</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px; font-weight: bold">Out-Noc (2px)</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px; font-weight: bold">Out-All (2px)</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px; font-weight: bold">Out-Noc (3px)</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px; font-weight: bold">Out-All (3px)</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px; font-weight: bold">D1-All</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px; font-weight: bold">D1-bg</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px; font-weight: bold">Noc-D1-All</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px; font-weight: bold">Noc-D1-bg</td>
+  </tr>
+  <tr>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;" colspan="18">Light-Weight Model</th>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">LEA-Stereo</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.78</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.90</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">2.39</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.13</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.45</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.65</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.40</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.51</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.29</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.81M</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">0.30s</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">ACVNet</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.48</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.83</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">2.34</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.13</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.47</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.65</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.37</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.52</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.26</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">6.20M</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">0.20s</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">IGEV-Stereo</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.48</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.65</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.19</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.71</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">2.17</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.12</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.44</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.59</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.38</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.49</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.27</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">12.60M</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">0.32s</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">Selective-IGEV</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.45</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.57</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.17</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.59</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">2.05</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.07</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.38</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.55</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.33</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.44</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.22</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">13.14M</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">0.24s</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">IGEV++</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.43</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.56</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">2.03</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.04</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.36</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.51</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.31</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.42</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.20</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">14.53M</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">0.28s</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">GREAT-IGEV (Ours)</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.41</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">2.20</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.51</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">10.12</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.14</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.49</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.51</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">2.00</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.02</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.37</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.50</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.28</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px; font-weight: bold">1.37</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px; font-weight: bold">1.14</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">14.44M</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">0.33s</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;"><a href="https://drive.google.com/drive/folders/1EZ_hScBixV9opzX7W3ItJXlqS5uNKZvJ?usp=drive_link">Google Drive</a></td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">GREAT-Selective (Ours)</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.42</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">2.19</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.52</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">10.11</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.15</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.48</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.48</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">1.94</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.00</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">1.31</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.49</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.27</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.40</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.16</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">14.98M</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">0.43s</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;"><a href="https://drive.google.com/drive/folders/1EZ_hScBixV9opzX7W3ItJXlqS5uNKZvJ?usp=drive_link">Google Drive</a></td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">GREAT-IGEV-Solid (Ours)</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.39</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">2.13</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.48</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">9.08</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.12</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.47</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">1.47</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.98</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">0.95</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.32</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">1.47</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">1.25</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px; font-weight: bold">1.37</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px; font-weight: bold">1.14</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">18.4M</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">0.33s</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;"><a href="https://drive.google.com/drive/folders/1EZ_hScBixV9opzX7W3ItJXlqS5uNKZvJ?usp=drive_link">Google Drive</a></td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">GREAT-Selective-Solid (Ours)</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">0.38</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">2.07</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">1.46</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">8.85</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">0.11</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">0.46</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">18.9M</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">0.43s</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;"><a href="https://drive.google.com/drive/folders/1EZ_hScBixV9opzX7W3ItJXlqS5uNKZvJ?usp=drive_link">Google Drive</a></td>
+  </tr>
+  <tr>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;" colspan="18">Foundation Model</th>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">ViTA-Stereo</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">0.34</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.46</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.80</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.93</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.16</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.50</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.21</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.41</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.12</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">AIO-Stereo</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.58</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.94</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.05</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.29</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.54</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.34</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.43</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.22</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">Foundation-Stereo</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">0.34</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">DEFOM-Stereo</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.42</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.43</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.79</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.94</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.18</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">1.41</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.25</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px; font-weight: bold">1.33</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.15</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">0.30s</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">IGEV++ (DepthAny)</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">-</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.36</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">1.74</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.89</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.13</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.43</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.15</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.36</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.07</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">348M</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">0.48s</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">Monster</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.37</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">2.00</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">1.35</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">9.18</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.14</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">0.44</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.36</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.75</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">0.84</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">1.09</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">1.41</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">1.13</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px; font-weight: bold">1.33</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px; font-weight: bold">1.05</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">388M</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">0.45s</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">-</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">GREAT-IGEV-DepthAny (Ours)</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.36</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">2.03</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.41</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">8.70</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">0.11</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.45</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px; font-weight: bold">1.34</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.76</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">0.85</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.13</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.43</td>
+    <td style="border: 1px solid #333; text-align: center; padding: 8px;">1.15</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.36</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">1.07</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">386M</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;">0.43s</td>
+    <td style="border: 2px solid #333; text-align: center; padding: 8px;"><a href="https://drive.google.com/drive/folders/1EZ_hScBixV9opzX7W3ItJXlqS5uNKZvJ?usp=drive_link">Google Drive</a></td>
+  </tr>
+</table>
+<p></p>
+
+**The zero-shot results for Foundation Models are:**
+<p align="center"></p>
+<table style="border-collapse: collapse; width: 100%;">
+  <tr>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">Models</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">SceneFlow (EPE)</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">KITTI2012 (D3)</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">KITTI2015 (D3)</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">Middlebury (D2)</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">ETH3D (D1)</th>
+  </tr>
+  <tr>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">StereoAnywhere</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">-</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">3.90</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">3.93</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">6.96</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">1.66</th>
+  </tr>
+  <tr>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">FoundationStereo</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">0.34</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">-</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">-</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">5.5</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">1.8</th>
+  </tr>
+  <tr>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">DEFOM-Stereo</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">0.42</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">3.76</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">4.99</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">5.91</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">2.35</th>
+  </tr>
+  <tr>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">Monster</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">0.37</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">3.37</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">3.44</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">7.98</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">1.10</th>
+  </tr>
+  <tr>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">Monster*</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">0.39</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">4.82</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">5.98</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">9.02</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">9.15</th>
+  </tr>
+  <tr>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">GREAT-IGEV-DepthAny (Ours)</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">0.36</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">4.31</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">5.48</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">7.86</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">5.82</th>
+  </tr>
+</table>
+<p></p>
+
+PS: `Monster*` is the result from the SceneFlow repreduction experiment by using the official code, see [issue#28](https://github.com/Junda24/MonSter/issues/28) in the official code for more information.
+
 ## :clapper: Demos & Results
 <p align="center"></p>
 <table align="center" width="100%" style="border-collapse: collapse; margin: 20px 0;">
