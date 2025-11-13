@@ -41,7 +41,7 @@ This solid and robust version of GREAT-Stereo is stored in GREATEN-Stereo folder
 - We extend the application of Spatial Attention.
 - We remove the redundant implementation of receptive augmentation.
 - We modify the cost volume construction pipeline with combined cost volume.
-- We implement Foundation-Model (DepthAny) based GREAT-IGEV by using the implementation in [Monster](https://github.com/Junda24/MonSter) and conduct the Foundation-Model-based experiments.
+- We implement Foundation-Model (DepthAny) based GREAT-IGEV named GREAT-IGEV-DepthAny by replacing the mobilenetv2 backbone with DepthAnythingV2, which is based on the implementation in [Monster](https://github.com/Junda24/MonSter), and conduct the Foundation-Model-based experiments.
 - We accelerate the training and evaluation with DistributedDataParallel settings.
 
 **The benchmark results and corresponding checkpoints are:**
@@ -438,7 +438,7 @@ This solid and robust version of GREAT-Stereo is stored in GREATEN-Stereo folder
   </tr>
   <tr>
     <th style="border: 2px solid #333; text-align: center; padding: 8px;">Monster</th>
-    <th style="border: 2px solid #333; text-align: center; padding: 8px;">0.37</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">0.38</th>
     <th style="border: 2px solid #333; text-align: center; padding: 8px;">3.37</th>
     <th style="border: 2px solid #333; text-align: center; padding: 8px;">3.44</th>
     <th style="border: 2px solid #333; text-align: center; padding: 8px;">7.98</th>
@@ -463,7 +463,7 @@ This solid and robust version of GREAT-Stereo is stored in GREATEN-Stereo folder
 </table>
 <p></p>
 
-PS: `Monster*` is the result from the SceneFlow reproduction experiment by using the official code, see [issue#28](https://github.com/Junda24/MonSter/issues/28) in the official code for more information.
+PS: `Monster*` is the result from the SceneFlow reproduction experiment by using the official code of Monster, see [issue#28](https://github.com/Junda24/MonSter/issues/28) in the official code for more information.
 
 ## :clapper: Demos & Results
 <p align="center"></p>
