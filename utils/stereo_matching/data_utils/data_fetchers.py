@@ -1,10 +1,11 @@
 import argparse
 import logging
 import torch.utils.data as data
+from typing import Union
 from utils.stereo_matching.data_utils.datasets import *
 
 
-def fetch_training_data(args: argparse.Namespace) -> data.DataLoader:
+def fetch_training_data(args: argparse.Namespace, dataset_only=False) -> Union[data.Dataset, data.DataLoader]:
     """ Create the data loader for the corresponding training set. """
 
     aug_params = {"crop_size": args.image_size, "min_scale": args.spatial_scale[0], "max_scale": args.spatial_scale[1], "do_flip": False, "yjitter": not args.noyjitter}
@@ -128,15 +129,20 @@ def fetch_training_data(args: argparse.Namespace) -> data.DataLoader:
             else:
                 train_dataset = train_dataset + new_dataset
     
-    train_loader = data.DataLoader(
-        train_dataset,
-        batch_size=args.batch_size,
-        pin_memory=True,
-        shuffle=True,
-        num_workers=int(os.environ.get("SLURM_CPUS_PER_TASK", 6)) - 2,
-        drop_last=True,
-    )
-
     logging.info(f"Training with {len(train_dataset)} image pairs.")
 
-    return train_loader
+    if dataset_only:
+        print("Only return the dataset.")
+        
+        return train_dataset
+    else:
+        train_loader = data.DataLoader(
+            train_dataset,
+            batch_size=args.batch_size,
+            pin_memory=True,
+            shuffle=True,
+            num_workers=int(os.environ.get("SLURM_CPUS_PER_TASK", 6)) - 2,
+            drop_last=True,
+        )
+
+        return train_loader

@@ -1,8 +1,9 @@
 import numpy as np
+import matplotlib
 import torch
 import torch.nn.functional as F
 from scipy import interpolate
-from typing import Any, List, Union
+from typing import Any, List, Tuple, Union
 
 try:
     autocast = torch.cuda.amp.autocast
@@ -114,7 +115,7 @@ def meshgrid(inputs: torch.Tensor, homogeneous: bool=False) -> torch.Tensor:
     return grid
 
 
-def disp_warp(img: torch.Tensor, disp: torch.Tensor, padding_mode: str="border"):
+def disp_warp(img: torch.Tensor, disp: torch.Tensor, padding_mode: str="border") -> Tuple[torch.Tensor]:
     """
     Warping by disparity.
     Args:
@@ -139,6 +140,25 @@ def disp_warp(img: torch.Tensor, disp: torch.Tensor, padding_mode: str="border")
     valid_mask[valid_mask > 0] = 1
 
     return warped_img, valid_mask
+
+
+def gray_2_colormap_np(img: torch.Tensor, cmap: str="rainbow", max: Union[int, float]=None) -> torch.Tensor:
+    img = img.cpu().detach().numpy().squeeze()
+    assert img.ndim == 2, "The wrong dimension for the img, which must be 2."
+    img[img < 0] = 0
+    mask_invalid = img < 1e-10
+    if max == None:
+        img = img / (img.max() + 1e-8)
+    else:
+        img = img / (max + 1e-8)
+    
+    norm = matplotlib.colors.Normalize(vmin=0, vmax=1.1)
+    cmap_m = matplotlib.cm.get_cmap(cmap)
+    map = matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap_m)
+    colormap = (map.to_rgba(img)[:, :, :3] * 255).astype(np.uint8)
+    colormap[mask_invalid] = 0
+
+    return colormap
 
 
 def forward_interpolate(disp: torch.Tensor) -> torch.Tensor:

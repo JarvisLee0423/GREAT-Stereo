@@ -69,6 +69,53 @@ def evaluate_eth3d(model: nn.Module, root: str, iters: int=32, mixed_prec: bool=
 
 
 @torch.no_grad()
+def evaluate_dist_eth3d(model: nn.Module, dataloader: torch.utils.data.DataLoader, device: torch.device, iters: int=32, is_main_process: bool=False) -> tuple:
+    """ Perform evaluation using the ETH3D (train) split. """
+    model.eval()
+
+    epe_list, out_list, occ_epe_list, occ_out_list, non_occ_epe_list, non_occ_out_list = [], [], [], [], [], []
+    for data in tqdm(dataloader, desc=f"Evaluating: ", dynamic_ncols=True, disable=not is_main_process):
+        (imageL_file, imageR_file, GT_file), left_img, right_img, disp_gt, valid = [x for x in data]
+        left_img = left_img.to(device)
+        right_img = right_img.to(device)
+        disp_gt = disp_gt.to(device)
+        valid = valid.to(device)
+
+        padder = InputPadder(left_img.shape, divis_by=32)
+        left_img, right_img = padder.pad(left_img, right_img)
+        with torch.no_grad():
+            outputs = model(left_img, right_img, iters=iters, test_mode=True)
+        disp_pred = padder.unpad(outputs[1])
+        assert disp_pred.shape == disp_gt.shape, (disp_pred.shape, disp_gt.shape)
+        epe = torch.sum((disp_pred - disp_gt) ** 2, dim=1).sqrt().unsqueeze(1)
+        nan_mask = ~torch.isnan(epe)
+        out = (epe > 1.0).float()
+        
+        occ_mask = Image.open(GT_file[0].replace("disp0GT.pfm", "mask0nocc.png")).convert("L")
+        occ_mask = torch.from_numpy(np.ascontiguousarray(occ_mask)).to(epe.dtype).to(device)
+        valid_mask = (valid >= 0.5) & (occ_mask==255)
+
+        epe = epe[valid_mask & nan_mask].mean().item()
+        out = out[valid_mask & nan_mask].mean().item()
+
+        epe_list.append(epe)
+        out_list.append(out)
+        occ_epe_list.append(0)
+        occ_out_list.append(0)
+        non_occ_epe_list.append(0)
+        non_occ_out_list.append(0)
+    
+    return (
+        epe_list,
+        out_list,
+        occ_epe_list,
+        occ_out_list,
+        non_occ_epe_list,
+        non_occ_out_list,
+    )
+
+
+@torch.no_grad()
 def evaluate_kitti(model: nn.Module, root: str, iters: int=32, mixed_prec: bool=False) -> dict:
     """ Perform evaluation using the KITTI (train) split. """
     model.eval()
@@ -146,6 +193,68 @@ def evaluate_kitti(model: nn.Module, root: str, iters: int=32, mixed_prec: bool=
 
 
 @torch.no_grad()
+def evaluate_dist_kitti(model: nn.Module, dataloader: torch.utils.data.DataLoader, device: torch.device, iters: int=32, is_main_process: bool=False) -> tuple:
+    """ Perform evaluation using the KITTI (train) split. """
+    model.eval()
+
+    epe_list, out_list, occ_epe_list, occ_out_list, non_occ_epe_list, non_occ_out_list = [], [], [], [], [], []
+    for data in tqdm(dataloader, desc=f"Evaluating: ", dynamic_ncols=True, disable=not is_main_process):
+        (imageL_file, imageR_file, GT_file), left_img, right_img, disp_gt, valid = [x for x in data]
+
+        left_img = left_img.to(device)
+        right_img = right_img.to(device)
+        disp_gt = disp_gt.to(device)
+        valid = valid.to(device)
+
+        padder = InputPadder(left_img.shape, divis_by=32)
+        left_img, right_img = padder.pad(left_img, right_img)
+
+        with torch.no_grad():
+            outputs = model(left_img, right_img, iters=iters, test_mode=True)
+        disp_pred = padder.unpad(outputs[1])
+        assert disp_pred.shape == disp_gt.shape, (disp_pred.shape, disp_gt.shape)
+        epe = torch.sum((disp_pred - disp_gt) ** 2, dim=1).sqrt().unsqueeze(1)
+        # epe = torch.abs(disp_pred - disp_gt)
+        nan_mask = ~torch.isnan(epe)
+        out = (epe > 3.0).float()
+        valid_mask = (valid.unsqueeze(1) >= 0.5) & (disp_gt.abs() < 192)
+
+        # Compute the occlusion and non-occlusion mask.
+        left_img = padder.unpad(left_img)
+        right_img = padder.unpad(right_img)
+        left_img = 2 * (left_img / 255.0) - 1.0
+        right_img = 2 * (right_img / 255.0) - 1.0
+        warped_right_img, mask = disp_warp(right_img, disp_gt)
+        error = (torch.abs(left_img - warped_right_img).mean(1, keepdim=True) < 0.03).float()
+        mask = error * mask
+        occ_mask = (1 - mask).bool() * valid_mask
+        nonocc_mask = mask.bool() * valid_mask
+
+        occ_epe = epe[occ_mask & nan_mask].mean().item()
+        occ_out = out[occ_mask & nan_mask].mean().item()
+        non_occ_epe = epe[nonocc_mask & nan_mask].mean().item()
+        non_occ_out = out[nonocc_mask & nan_mask].mean().item()
+        epe = epe[valid_mask & nan_mask].mean().item()
+        out = out[valid_mask & nan_mask].mean().item()
+    
+        epe_list.append(epe)
+        out_list.append(out)
+        occ_epe_list.append(occ_epe)
+        occ_out_list.append(occ_out)
+        non_occ_epe_list.append(non_occ_epe)
+        non_occ_out_list.append(non_occ_out)
+
+    return (
+        epe_list,
+        out_list,
+        occ_epe_list,
+        occ_out_list,
+        non_occ_epe_list,
+        non_occ_out_list,
+    )
+
+
+@torch.no_grad()
 def evaluate_sceneflow(model: nn.Module, root: str, iters: int=32, mixed_prec: bool=False) -> dict:
     """ Perform evaluation using the SceneFlow (test) split. """
     model.eval()
@@ -210,6 +319,68 @@ def evaluate_sceneflow(model: nn.Module, root: str, iters: int=32, mixed_prec: b
     print(f"Evaluation SceneFlow: EPE {round(epe, 4)}, D3 {round(d3, 4)}, Occ-EPE {round(occ_epe, 4)}, Occ-D3 {round(occ_d3, 4)}, Non-Occ-EPE {round(nonocc_epe, 4)}, Non-Occ-D3 {round(nonocc_d3, 4)}.")
 
     return {"sceneflow-epe": epe, "sceneflow-d3": d3, "sceneflow-occ-epe": occ_epe, "sceneflow-occ-d3": occ_d3, "sceneflow-nonocc-epe": nonocc_epe, "sceneflow-nonocc-d3": nonocc_d3}
+
+
+@torch.no_grad()
+def evaluate_dist_sceneflow(model: nn.Module, dataloader: torch.utils.data.DataLoader, device: torch.device, iters: int=32, is_main_process: bool=False) -> tuple:
+    """ Perform evaluation using the SceneFlow (test) split. """
+    model.eval()
+
+    epe_list, out_list, occ_epe_list, occ_out_list, non_occ_epe_list, non_occ_out_list = [], [], [], [], [], []
+    for data in tqdm(dataloader, desc=f"Evaluating: ", dynamic_ncols=True, disable=not is_main_process):
+        (imageL_file, imageR_file, GT_file), left_img, right_img, disp_gt, valid = [x for x in data]
+
+        left_img = left_img.to(device)
+        right_img = right_img.to(device)
+        disp_gt = disp_gt.to(device)
+        valid = valid.to(device)
+
+        padder = InputPadder(left_img.shape, divis_by=32)
+        left_img, right_img = padder.pad(left_img, right_img)
+
+        with torch.no_grad():
+            outputs = model(left_img, right_img, iters=iters, test_mode=True)
+        disp_pred = padder.unpad(outputs[1])
+        assert disp_pred.shape == disp_gt.shape, (disp_pred.shape, disp_gt.shape)
+        # epe = torch.sum((disp_pred - disp_gt) ** 2, dim=1).sqrt().unsqueeze(1)
+        epe = torch.abs(disp_pred - disp_gt)
+        nan_mask = ~torch.isnan(epe)
+        out = (epe > 3.0).float()
+        valid_mask = (valid.unsqueeze(1) >= 0.5) & (disp_gt.abs() < 192)
+
+        # Compute the occlusion and non-occlusion mask.
+        left_img = padder.unpad(left_img)
+        right_img = padder.unpad(right_img)
+        left_img = 2 * (left_img / 255.0) - 1.0
+        right_img = 2 * (right_img / 255.0) - 1.0
+        warped_right_img, mask = disp_warp(right_img, disp_gt)
+        error = (torch.abs(left_img - warped_right_img).mean(1, keepdim=True) < 0.03).float()
+        mask = error * mask
+        occ_mask = (1 - mask).bool() * valid_mask
+        nonocc_mask = mask.bool() * valid_mask
+
+        occ_epe = epe[occ_mask & nan_mask].mean().item()
+        occ_out = out[occ_mask & nan_mask].mean().item()
+        non_occ_epe = epe[nonocc_mask & nan_mask].mean().item()
+        non_occ_out = out[nonocc_mask & nan_mask].mean().item()
+        epe = epe[valid_mask & nan_mask].mean().item()
+        out = out[valid_mask & nan_mask].mean().item()
+    
+        epe_list.append(epe)
+        out_list.append(out)
+        occ_epe_list.append(occ_epe)
+        occ_out_list.append(occ_out)
+        non_occ_epe_list.append(non_occ_epe)
+        non_occ_out_list.append(non_occ_out)
+
+    return (
+        epe_list,
+        out_list,
+        occ_epe_list,
+        occ_out_list,
+        non_occ_epe_list,
+        non_occ_out_list,
+    )
 
 
 @torch.no_grad()
@@ -381,6 +552,101 @@ def evaluate_middlebury(model: nn.Module, root: str, iters: int=32, split: str="
     print(f"Evaluation Middlebury-{split}: EPE {round(epe, 4)}, D2 {round(d2, 4)}.")
 
     return {f"middlebury-{split}-epe": epe, f"middlebury-{split}-d2": d2}
+
+
+@torch.no_grad()
+def evaluate_middlebury(model: nn.Module, root: str, iters: int=32, split: str="F", mixed_prec: bool=False) -> dict:
+    """ Perform evaluation using the Middlebury dataset. """
+    model.eval()
+    aug_params = {}
+    eval_dataset = MiddleburyStereoDataset(aug_params, root, split="MiddEval3", resolution=split)
+
+    out_list, epe_list = [], []
+    for eval_id in tqdm(range(len(eval_dataset))):
+        (_, _, disp_file), left_img, right_img, disp_gt, valid_gt = eval_dataset[eval_id]
+        
+        left_img = left_img[None].cuda()
+        right_img = right_img[None].cuda()
+
+        padder = InputPadder(left_img.shape, divis_by=32)
+        left_img, right_img = padder.pad(left_img, right_img)
+
+        with autocast(enabled=mixed_prec):
+            outputs = model(left_img, right_img, iters=iters, test_mode=True)
+        disp_pr = padder.unpad(outputs[1]).cpu().squeeze(0)
+
+        assert disp_pr.shape == disp_gt.shape, (disp_pr.shape, disp_gt.shape)
+
+        epe = torch.sum((disp_pr - disp_gt) ** 2, dim=0).sqrt()
+        epe_flattened = epe.flatten()
+
+        occ_mask = Image.open(disp_file.replace("disp0GT.pfm", "mask0nocc.png")).convert("L")
+        occ_mask = np.ascontiguousarray(occ_mask, dtype=np.float32).flatten()
+
+        valid = (valid_gt.reshape(-1) >= 0.5) & (occ_mask==255)
+        out = (epe_flattened > 2.0)
+        image_out = out[valid].float().mean().item()
+        image_epe = epe_flattened[valid].mean().item()
+        logging.info(f"Middlebury Iter {eval_id + 1} out of {len(eval_dataset)}. EPE {round(image_epe, 4)} D2 {round(image_out, 4)}.")
+        epe_list.append(image_epe)
+        out_list.append(image_out)
+    
+    epe_list = np.array(epe_list)
+    out_list = np.array(out_list)
+
+    epe = np.mean(epe_list)
+    d2 = 100 * np.mean(out_list)
+
+    print(f"Evaluation Middlebury-{split}: EPE {round(epe, 4)}, D2 {round(d2, 4)}.")
+
+    return {f"middlebury-{split}-epe": epe, f"middlebury-{split}-d2": d2}
+
+
+@torch.no_grad()
+def evaluate_dist_middlebury(model: nn.Module, dataloader: torch.utils.data.DataLoader, device: torch.device, iters: int=32, is_main_process: bool=False) -> tuple:
+    """ Perform evaluation using the ETH3D (train) split. """
+    model.eval()
+
+    epe_list, out_list, occ_epe_list, occ_out_list, non_occ_epe_list, non_occ_out_list = [], [], [], [], [], []
+    for data in tqdm(dataloader, desc=f"Evaluating: ", dynamic_ncols=True, disable=not is_main_process):
+        (imageL_file, imageR_file, GT_file), left_img, right_img, disp_gt, valid = [x for x in data]
+        left_img = left_img.to(device)
+        right_img = right_img.to(device)
+        disp_gt = disp_gt.to(device)
+        valid = valid.to(device)
+
+        padder = InputPadder(left_img.shape, divis_by=32)
+        left_img, right_img = padder.pad(left_img, right_img)
+        with torch.no_grad():
+            outputs = model(left_img, right_img, iters=iters, test_mode=True)
+        disp_pred = padder.unpad(outputs[1])
+        assert disp_pred.shape == disp_gt.shape, (disp_pred.shape, disp_gt.shape)
+        epe = torch.sum((disp_pred - disp_gt) ** 2, dim=1).sqrt().unsqueeze(1)
+        nan_mask = ~torch.isnan(epe)
+        out = (epe > 2.0).float()
+        
+        occ_mask = Image.open(GT_file[0].replace("disp0GT.pfm", "mask0nocc.png")).convert("L")
+        occ_mask = torch.from_numpy(np.ascontiguousarray(occ_mask)).to(epe.dtype).to(device)
+        valid_mask = (valid >= 0.5) & (occ_mask==255)
+
+        epe = epe[valid_mask & nan_mask].mean().item()
+        out = out[valid_mask & nan_mask].mean().item()
+
+        epe_list.append(epe)
+        out_list.append(out)
+        occ_epe_list.append(0)
+        occ_out_list.append(0)
+        non_occ_epe_list.append(0)
+        non_occ_out_list.append(0)
+    
+    return (
+        epe_list,
+        out_list,
+        occ_epe_list,
+        occ_out_list,
+        non_occ_epe_list,
+        non_occ_out_list,
+    )
 
 
 @torch.no_grad()
