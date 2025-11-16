@@ -189,7 +189,7 @@ def train_dist(local_rank: int, world_size: int, args: argparse.Namespace) -> st
     if restore_total_step is not None:
         dist.barrier()
     
-    validation_frequency = 10000
+    validation_frequency = 5000
 
     scaler = GradScaler(enabled=args.mixed_precision) if args.precision_dtype != "bfloat16" else None
 
@@ -256,6 +256,8 @@ def train_dist(local_rank: int, world_size: int, args: argparse.Namespace) -> st
                 scaler.step(optimizer)
                 scheduler.step()
                 scaler.update()
+            
+            dist.barrier()
 
             if total_steps % validation_frequency == validation_frequency - 1:
                 if is_main_process:
@@ -266,6 +268,9 @@ def train_dist(local_rank: int, world_size: int, args: argparse.Namespace) -> st
                     torch.save(model.state_dict(), save_path)
                     torch.save(optimizer.state_dict(), optimizer_path)
                     torch.save(scheduler.state_dict(), scheduler_path)
+                
+                dist.barrier()
+
                 model.eval()
                 epe_list, out_list, occ_epe_list, occ_out_list, non_occ_epe_list, non_occ_out_list = [], [], [], [], [], []
                 for data in tqdm(val_loader, desc=f"Evaluating: ", dynamic_ncols=True, disable=not is_main_process):
