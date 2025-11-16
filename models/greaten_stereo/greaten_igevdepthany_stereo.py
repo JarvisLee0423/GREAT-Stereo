@@ -3,6 +3,7 @@ import argparse
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision
 from typing import List, Tuple, Union
 from utils.utils import autocast
 from models.greaten_stereo.updaters import BasicMultiUpdateBlock
@@ -39,12 +40,6 @@ class GREATENStereo(nn.Module):
         dim_list.append(dim_list_config)
 
         self.update_block = BasicMultiUpdateBlock(self.args, channels=args.channels)
-
-        # self.context_stem = nn.Sequential(
-        #     nn.Conv2d(feat_channels[0], dim_list[0], kernel_size=1, padding=0, stride=1),
-        #     nn.Conv2d(feat_channels[1], dim_list[0], kernel_size=1, padding=0, stride=1),
-        #     nn.Conv2d(feat_channels[2], dim_list[0], kernel_size=1, padding=0, stride=1),
-        # )
 
         self.context_zqr_convs = nn.ModuleList([
             nn.Conv2d(context_channels[i], args.channels[i] * 3, 3, padding=3 // 2)
@@ -128,10 +123,8 @@ class GREATENStereo(nn.Module):
 
         del depth_anything, depth_anything_decoder, state_dict_dpt
 
-        mean = [0.485, 0.456, 0.406]
-        std = [0.229, 0.224, 0.225]
-        self.mean = torch.tensor(mean)
-        self.std = torch.tensor(std)
+        self.mean = [0.485, 0.456, 0.406]
+        self.std = [0.229, 0.224, 0.225]
     
     def freeze_bn(self) -> None:
         for name, module in self.named_modules():
@@ -144,6 +137,15 @@ class GREATENStereo(nn.Module):
         for name, module in self.named_modules():
             if isinstance(module, nn.BatchNorm2d):
                 self.freezing_module_list.append(name)
+    
+    def normalize_image(self, img: torch.Tensor) -> torch.Tensor:
+        normalizer = torchvision.transforms.Normalize(
+            mean=self.mean,
+            std=self.std,
+            inplace=False,
+        )
+
+        return normalizer(img).contiguous()
     
     def upsample_disp(self, disp: torch.Tensor, mask_feat_4: torch.Tensor, stem_2x: torch.Tensor) -> torch.Tensor:
         with autocast(enabled=self.args.mixed_precision, dtype=getattr(torch, self.args.precision_dtype, torch.float16)):
@@ -174,8 +176,8 @@ class GREATENStereo(nn.Module):
     def forward(self, left_img: torch.Tensor, right_img: torch.Tensor, iters: int=12, disp_init: torch.Tensor=None, test_mode: bool=False) -> Tuple[Union[torch.Tensor, Union[List[torch.Tensor], dict, int, float]]]:
         """ Estimate disparity between pair of frames. """
 
-        left_img = (2 * (left_img / 255.0) - 1.0).contiguous()
-        right_img = (2 * (right_img / 255.0) - 1.0).contiguous()
+        left_img = self.normalize_image(left_img / 255.0)
+        right_img = self.normalize_image(right_img / 255.0)
 
         _, feat_mono_left, feat_mono_right = self.infer_mono(left_img, right_img)
 
@@ -201,9 +203,6 @@ class GREATENStereo(nn.Module):
                 spx_pred = self.spx(xspx)
                 spx_pred = F.softmax(spx_pred, 1)
             
-            # context_left_list = [
-            #     mono_left + self.context_stem[i](torch.relu(context_left)) for i, (mono_left, context_left) in enumerate(zip(feat_mono_left[:-1], context_left[:-1]))
-            # ]
             feat_context_left = [
                 self.context_fuse[i](torch.cat([mono, context], dim=1)) for i, (mono, context) in enumerate(zip(feat_mono_left[:-1], context_left[:-1]))
             ]
