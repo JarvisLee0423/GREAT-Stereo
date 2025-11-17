@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from typing import Any, Tuple, Union
 from einops import rearrange
 from models.great_stereo.attentions import *
+from models.great_stereo.basic_modules import *
 
 
 def to_3d(inputs: torch.Tensor, dim: int=1) -> torch.Tensor:
@@ -552,6 +553,43 @@ class VolumeTransformerBlock(nn.Module):
     
     def forward(self, volume: torch.Tensor, feats: torch.Tensor) -> Tuple[torch.Tensor]:
         b, c, d, h, w = volume.shape
+
+        update_volume, attn = self.volume_attn(volume.clone(), feats)
+        volume = volume + update_volume
+        volume = volume + rearrange(self.feedforward(rearrange(volume, "b c d h w -> (b h w) d c").clone()), "(b h w) d c -> b c d h w", b=b, h=h, w=w)
+
+        return volume, attn
+
+
+class ChannelExtensionVolumeTransformerBlock(nn.Module):
+    def __init__(self, feat_channels: int, cv_channels: int, num_heads: int, expansion: int=2):
+        super(ChannelExtensionVolumeTransformerBlock, self).__init__()
+
+        self.feat_attn = nn.Sequential(
+            BasicConv(feat_channels, feat_channels // 2, kernel_size=1, stride=1, padding=0),
+            nn.Conv2d(feat_channels // 2, cv_channels, 1),
+        )
+
+        self.volume_attn = VolumeAttentionLayer(
+            in_channels=cv_channels,
+            hidden_channels=cv_channels,
+            out_channels=cv_channels,
+            num_heads=num_heads,
+            dropout=0.0,
+            pre_norm=True,
+            sink_competition=True,
+        )
+        self.feedforward = nn.Sequential(
+            nn.LayerNorm(cv_channels),
+            nn.Linear(cv_channels, expansion * cv_channels),
+            nn.SiLU(),
+            nn.Linear(expansion * cv_channels, cv_channels),
+        )
+    
+    def forward(self, volume: torch.Tensor, feats: torch.Tensor) -> Tuple[torch.Tensor]:
+        b, c, d, h, w = volume.shape
+
+        feats = self.feat_attn(feats)
 
         update_volume, attn = self.volume_attn(volume.clone(), feats)
         volume = volume + update_volume

@@ -3,7 +3,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from typing import Any, List, Tuple, Union
-from utils.utils import autocast
+from utils.utils import autocast, meshgrid, normalize_coords
+from models.great_stereo.basic_modules import BasicConvReLU
+from models.great_stereo.feature_extractors import SimpleUNet
 
 
 def pool2x(inputs: torch.Tensor) -> torch.Tensor:
@@ -12,6 +14,23 @@ def pool2x(inputs: torch.Tensor) -> torch.Tensor:
 
 def pool4x(inputs: torch.Tensor) -> torch.Tensor:
     return F.avg_pool2d(inputs, 5, stride=4, padding=1)
+
+
+def conv2d(in_channels: int, out_channels: int, kernel_size: int=3, stride: int=1, dilation: int=1, groups: int=1) -> nn.Sequential:
+    return nn.Sequential(
+        nn.Conv2d(
+            in_channels,
+            out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=dilation,
+            dilation=dilation,
+            bias=False,
+            groups=groups
+        ),
+        nn.BatchNorm2d(out_channels),
+        nn.LeakyReLU(0.2, inplace=True),
+    )
 
 
 def interp(inputs: torch.Tensor, dest: torch.Tensor) -> torch.Tensor:
@@ -25,6 +44,48 @@ def interp(inputs: torch.Tensor, dest: torch.Tensor) -> torch.Tensor:
     else:
         output = output_fp32
     return output
+
+
+def interp_mono(inputs: torch.Tensor, sample_grid: torch.Tensor, padding_mode: str) -> torch.Tensor:
+    original_dtype = inputs.dtype
+    inputs_fp32 = inputs.float()
+    sample_grid_fp32 = sample_grid.float()
+    with autocast(enabled=False):
+        output_fp32 = F.grid_sample(inputs_fp32, sample_grid_fp32, mode="bilinear", padding_mode=padding_mode)
+    if original_dtype != torch.float32:
+        output = output_fp32.to(original_dtype)
+    else:
+        output = output_fp32
+    
+    return output
+
+
+def disp_warp_mono(img: torch.Tensor, disp: torch.Tensor, padding_mode: str="border") -> Tuple[torch.Tensor]:
+    """
+    Warping by disparity.
+
+    Args:
+        img: [B, 3, H, W].
+        disp: [B, 1, H, W], positive.
+        padding_mode: "zeros" or "border".
+    Returns:
+        warped_img: [B, 3, H, W].
+        valid_mask: [B, 3, H, W].
+    """
+
+    grid = meshgrid(img) # [B, 2, H, W] in image scale.
+    # Note that -disp here.
+    offset = torch.cat((-disp, torch.zeros_like(disp)), dim=1) # [B, 2, H, W].
+    sample_grid = grid + offset
+    sample_grid = normalize_coords(sample_grid) # [B, H, W, 2] in [-1, 1].
+    warped_img = interp_mono(img, sample_grid, padding_mode)
+
+    mask = torch.ones_like(img)
+    valid_mask = interp_mono(mask, sample_grid, padding_mode)
+    valid_mask[valid_mask < 0.9999] = 0
+    valid_mask[valid_mask > 0] = 1
+
+    return warped_img, valid_mask
 
 
 class DispHead(nn.Module):
@@ -152,7 +213,10 @@ class BasicMotionEncoder(nn.Module):
 
         self.args = args
 
-        cv_channels = args.cv_levels * (2 * args.cv_radius + 1) * (8 + 1)
+        if "solid" in self.args.name:
+            cv_channels = args.cv_levels * (2 * args.cv_radius + 1) * (24 + 1)
+        else:
+            cv_channels = args.cv_levels * (2 * args.cv_radius + 1) * (8 + 1)
 
         self.convc1 = nn.Conv2d(cv_channels, 64, 1, padding=0)
         self.convc2 = nn.Conv2d(64, 64, 3, padding=1)
@@ -205,9 +269,15 @@ class SelectiveMotionEncoder(nn.Module):
         self.args = args
 
         if "raft" in self.args.name:
-            cv_channels = args.cv_levels * (2 * args.cv_radius + 1)
+            if "solid" in self.args.name:
+                cv_channels = args.cv_levels * (2 * args.cv_radius + 1) * (24 + 1)
+            else:
+                cv_channels = args.cv_levels * (2 * args.cv_radius + 1)
         else:
-            cv_channels = args.cv_levels * (2 * args.cv_radius + 1) * (8 + 1)
+            if "solid" in self.args.name:
+                cv_channels = args.cv_levels * (2 * args.cv_radius + 1) * (24 + 1)
+            else:
+                cv_channels = args.cv_levels * (2 * args.cv_radius + 1) * (8 + 1)
 
         self.convc1 = nn.Conv2d(cv_channels, 64, 1, padding=0)
         self.convc2 = nn.Conv2d(64, 64, 3, padding=1)
@@ -414,3 +484,151 @@ class BasicSelectiveMultiUpdateBlock(nn.Module):
             mask = 0.25 * self.mask_feat_4(net[0])
 
         return net, mask, delta_disp
+
+
+class MonoDepthMotionEncoder(nn.Module):
+    def __init__(self, args: argparse.Namespace):
+        super(MonoDepthMotionEncoder, self).__init__()
+
+        self.args = args
+
+        cv_channels = 96 + args.cv_levels * (2 * args.cv_radius + 1) * (24 + 1)
+
+        self.convc1 = nn.Conv2d(cv_channels, 64, 1, padding=0)
+        self.convc2 = nn.Conv2d(64, 64, 3, padding=1)
+        self.convc1_mono = nn.Conv2d(cv_channels, 64, 1, padding=0)
+        self.convc2_mono = nn.Conv2d(64, 64, 3, padding=1)
+        self.convd1 = nn.Conv2d(1, 64, 7, padding=3)
+        self.convd2 = nn.Conv2d(64, 64, 3, padding=1)
+        self.convd1_mono = nn.Conv2d(1, 64, 7, padding=3)
+        self.convd2_mono = nn.Conv2d(64, 64, 3, padding=1)
+        self.conv = nn.Conv2d(128, 64 - 1, 3, padding=1)
+        self.conv_mono = nn.Conv2d(128, 64 - 1, 3, padding=1)
+    
+    def forward(self, disp: torch.Tensor, cv: torch.Tensor, flaw_stereo: torch.Tensor, disp_mono: torch.Tensor, cv_mono: torch.Tensor, flaw_mono: torch.Tensor) -> torch.Tensor:
+        cv = F.relu(self.convc1(torch.cat([cv, flaw_stereo], dim=1)))
+        cv = F.relu(self.convc2(cv))
+        cv_mono = F.relu(self.convc1_mono(torch.cat([cv_mono, flaw_mono], dim=1)))
+        cv_mono = F.relu(self.convc2_mono(cv_mono))
+        disp_feat = F.relu(self.convd1(disp))
+        disp_feat = F.relu(self.convd2(disp_feat))
+        disp_mono_feat = F.relu(self.convd1_mono(disp_mono))
+        disp_mono_feat = F.relu(self.convd2_mono(disp_mono_feat))
+
+        cv_disp = torch.cat([cv, disp_feat], dim=1)
+        cv_disp_mono = torch.cat([cv_mono, disp_mono_feat], dim=1)
+        out = F.relu(self.conv(cv_disp))
+        out_mono = F.relu(self.conv_mono(cv_disp_mono))
+
+        return torch.cat([out, disp, out_mono, disp_mono], dim=1)
+
+
+class MonoDepthMultiUpdateBlock(nn.Module):
+    def __init__(self, args: argparse.Namespace, channels: list=[]):
+        super(MonoDepthMultiUpdateBlock, self).__init__()
+
+        self.args = args
+        self.encoder = MonoDepthMotionEncoder(args)
+        encoder_out_channels = 128
+
+        self.gru04 = ConvGRU(channels[2], encoder_out_channels + channels[1] * (args.n_gru_layers > 1))
+        self.gru08 = ConvGRU(channels[1], channels[0] * (args.n_gru_layers == 3) + channels[2])
+        self.gru16 = ConvGRU(channels[0], channels[1])
+        self.disp_head = DispHead(channels[2], channels=256, out_channels=1)
+        factor = 2 ** self.args.n_downsample
+
+        self.mask_feat_4 = nn.Sequential(
+            nn.Conv2d(channels[2], 32, 3, padding=1),
+            nn.ReLU(inplace=True),
+        )
+    
+    def forward(self, net: List[torch.Tensor], inp: List[List[torch.Tensor]], flaw_stereo: torch.Tensor=None, disp: torch.Tensor=None, cv: torch.Tensor=None, flaw_mono: torch.Tensor=None, disp_mono: torch.Tensor=None, cv_mono: torch.Tensor=None, iter04: bool=True, iter08: bool=True, iter16: bool=True, update: bool=True) -> Tuple[torch.Tensor]:
+        if iter16:
+            net[2] = self.gru16(net[2], *(inp[2]), pool2x(net[1]))
+        if iter08:
+            if self.args.n_gru_layers > 2:
+                net[1] = self.gru08(net[1], *(inp[1]), pool2x(net[0]), interp(net[2], net[1]))
+            else:
+                net[1] = self.gru08(net[1], *(inp[1]), pool2x(net[0]))
+        if iter04:
+            motion_features = self.encoder(disp, cv, flaw_stereo, disp_mono, cv_mono, flaw_mono)
+            if self.args.n_gru_layers > 1:
+                net[0] = self.gru04(net[0], *(inp[0]), motion_features, interp(net[1], net[0]))
+            else:
+                net[0] = self.gru04(net[0], *(inp[0]), motion_features)
+        
+        if not update:
+            return net
+        
+        delta_disp = self.disp_head(net[0])
+        mask_feat_4 = self.mask_feat_4(net[0])
+
+        return net, mask_feat_4, delta_disp
+
+
+class REMP(nn.Module):
+    """
+    Height and width need to be divided by 16.
+    """
+    def __init__(self):
+        super(REMP, self).__init__()
+
+        # Left and warped flaw.
+        in_channels = 6
+        channel = 32
+        self.conv1_mono = conv2d(in_channels, 16)
+        self.conv1_stereo = conv2d(in_channels, 16)
+        self.conv2_mono = conv2d(1, 16) # On low disparity.
+        self.conv2_stereo = conv2d(1, 16) # On low disparity.
+
+        self.conv_start = BasicConvReLU(64, channel, kernel_size=3, padding=2, dilation=2)
+        self.refinement_block = SimpleUNet(in_channels=channel)
+        self.ap = nn.AdaptiveAvgPool2d(1)
+        
+        self.lfe = nn.Sequential(
+            nn.Conv2d(channel, channel * 2, 1, padding=0, bias=True),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(channel * 2, channel, 1, padding=0, bias=True),
+            nn.Sigmoid(),
+        )
+        self.lmc = nn.Sequential(
+            nn.Conv2d(channel, channel, 3, padding=(3 // 2), bias=True),
+            nn.Conv2d(channel, channel * 2, 3, padding=(3 // 2), bias=True),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(channel * 2, channel, 3, padding=(3 // 2), bias=True),
+            nn.Sigmoid(),
+        )
+
+        self.final_conv = nn.Conv2d(32, 1, 3, 1, 1)
+    
+    def forward(self, disp_mono: torch.Tensor, disp_stereo: torch.Tensor, left_img: torch.Tensor, right_img: torch.Tensor) -> torch.Tensor:
+        assert disp_mono.dim() == 4, "The length of shape of disp_mono is not 4."
+        assert disp_stereo.dim() == 4, "The length of shape of disp_stereo is not 4."
+
+        warped_right_mono = disp_warp_mono(right_img, disp_mono)[0] # [B, 3, H, W].
+        flaw_mono = warped_right_mono - left_img # [B, 3, H, W].
+
+        warped_right_stereo = disp_warp_mono(right_img, disp_stereo)[0] # [B, 3, H, W].
+        flaw_stereo = warped_right_stereo - left_img
+
+        ref_flaw_mono = torch.cat((flaw_mono, left_img), dim=1) # [B, 6, H, W].
+        ref_flaw_stereo = torch.cat((flaw_stereo, left_img), dim=1) # [B, 6, H, W].
+
+        ref_flaw_mono = self.conv1_mono(ref_flaw_mono) # [B, 16, H, W].
+        ref_flaw_stereo = self.conv1_stereo(ref_flaw_stereo) # [B, 16, H, W].
+
+        disp_feat_mono = self.conv2_mono(disp_mono) # [B, 16, H, W].
+        disp_feat_stereo = self.conv2_stereo(disp_stereo) # [B, 16, H, W].
+
+        x = torch.cat((ref_flaw_mono, disp_feat_mono, ref_flaw_stereo, disp_feat_stereo), dim=1) # [B, 64, H, W].
+        x = self.conv_start(x) # [B, 32, H, W].
+        x = self.refinement_block(x) # [B, 32, H, W].
+
+        low = self.lfe(self.ap(x))
+        motif = self.lmc(x)
+        x = torch.mul((1 - motif), low) + torch.mul(motif, x)
+        x = self.final_conv(x) # [B, 1, H, W].
+
+        disp_stereo = nn.LeakyReLU()(disp_stereo + x) # [B, 1, H, W].
+
+        return disp_stereo

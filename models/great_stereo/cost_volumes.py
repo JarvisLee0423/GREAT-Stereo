@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from typing import List, Tuple
 from utils.utils import bilinear_sampler
 from models.great_stereo.basic_modules import disparity_regression, BasicConv, BasicConvIN
-from models.great_stereo.feature_extractors import FeatureAttn, AdaptiveGlobalRefiner, HourglassEncoder, GlobalAttentionFeatureRefiner, ExcitiveAttentionHourglassEncoder
+from models.great_stereo.feature_extractors import FeatureAttn, AdaptiveGlobalRefiner, HourglassEncoder, GlobalAttentionFeatureRefiner, ChannelExtensionGlobalAttentionFeatureRefiner, ExcitiveAttentionHourglassEncoder, ChannelExtensionExcitiveAttentionHourglassEncoder, ChannelExtensionSimpleExcitiveAttentionHourglassEncoder
 from models.great_stereo.positions import PositionalEmbeddingCosine2D
 from models.great_stereo.transformers import TransformerFeatureRefiner
 
@@ -196,6 +196,175 @@ class ExcitiveAttentionVolume(nn.Module):
         init_disp = disparity_regression(ea_prob, self.max_disp // 4)
 
         return match_left, match_right, ea_volume, init_disp
+
+
+class ChannelExtensionExcitiveAttentionVolume(nn.Module):
+    def __init__(self, channels: int, feat_channels: List[int], max_disp: int, num_groups: int=8):
+        super(ChannelExtensionExcitiveAttentionVolume, self).__init__()
+
+        self.max_disp = max_disp
+        self.num_groups = num_groups
+
+        self.global_spatial_refiner = AdaptiveGlobalRefiner(channels)
+        self.matching_pos = PositionalEmbeddingCosine2D(channels // 2, normalize=True)
+        self.global_matching_refiner = TransformerFeatureRefiner(channels, 1, 4, receptive_aug="conv")
+
+        self.global_context_refiner = ChannelExtensionGlobalAttentionFeatureRefiner(feat_channels)
+
+        self.cc_stem = nn.Sequential(
+            BasicConv(channels * 2, channels, is_3d=True, bn=True, relu=True, kernel_size=(1, 3, 3), stride=1, padding=(0, 1, 1)),
+            BasicConv(channels, channels // 2, is_3d=True, bn=True, relu=True, kernel_size=3, stride=1, padding=1),
+            BasicConv(channels // 2, num_groups, is_3d=True, bn=True, relu=True, kernel_size=3, stride=1, padding=1),
+        )
+        self.feat_stem = nn.Sequential(
+            BasicConv(feat_channels[0], feat_channels[0] // 2, bn=True, relu=True, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(feat_channels[0] // 2, num_groups, kernel_size=1, stride=1, padding=0, bias=False),
+        )
+        self.fuse_stem = BasicConv(num_groups, num_groups, is_3d=True, kernel_size=(1, 5, 5), padding=(0, 2, 2), stride=1)
+        
+        self.eav_agg = ChannelExtensionExcitiveAttentionHourglassEncoder(num_groups, feat_channels)
+    
+    def forward(self, feat_left: List[torch.Tensor], feat_right: List[torch.Tensor]) -> Tuple[torch.Tensor]:
+        # Compute the pre-spatial refine for the context feature with the largest resolution.
+        match_left = self.global_spatial_refiner(feat_left[0])
+        match_right = self.global_spatial_refiner(feat_right[0])
+
+        # Compute the matching attention for the context feature with the largest resolution.
+        match_left = match_left + self.matching_pos(match_left)
+        match_right = match_right + self.matching_pos(match_right)
+        match_left, match_right = self.global_matching_refiner(match_left.float(), match_right.float())
+
+        # Compute the spatial attention for context features.
+        context_left = self.global_context_refiner(feat_left)
+
+        # Compute the concatenated feature cost volume.
+        cc_volume = build_concat_volume(match_left, match_right, self.max_disp // 4)
+        cc_volume = self.cc_stem(cc_volume)
+        feat_volume = self.feat_stem(context_left[0]).unsqueeze(2)
+        cfc_volume = self.fuse_stem(feat_volume * cc_volume)
+
+        # Aggregate the concatenated feature cost volume by excitive attention mechanism.
+        ea_volume, ea_prob = self.eav_agg(cfc_volume, context_left)
+
+        # Get the initialized disparity.
+        init_disp = disparity_regression(ea_prob, self.max_disp // 4)
+
+        return match_left, match_right, ea_volume, init_disp
+
+
+class ChannelExtensionSimpleExcitiveAttentionVolume(nn.Module):
+    def __init__(self, channels: int, feat_channels: List[int], max_disp: int, num_groups: int=8):
+        super(ChannelExtensionSimpleExcitiveAttentionVolume, self).__init__()
+
+        self.max_disp = max_disp
+        self.num_groups = num_groups
+
+        self.global_spatial_refiner = AdaptiveGlobalRefiner(channels)
+        self.matching_pos = PositionalEmbeddingCosine2D(channels // 2, normalize=True)
+        self.global_matching_refiner = TransformerFeatureRefiner(channels, 1, 4, receptive_aug="conv")
+
+        self.global_context_refiner = ChannelExtensionGlobalAttentionFeatureRefiner(feat_channels)
+
+        self.cc_stem = nn.Sequential(
+            BasicConv(channels * 2, channels, is_3d=True, bn=True, relu=True, kernel_size=(1, 3, 3), stride=1, padding=(0, 1, 1)),
+            BasicConv(channels, channels // 2, is_3d=True, bn=True, relu=True, kernel_size=3, stride=1, padding=1),
+            BasicConv(channels // 2, num_groups, is_3d=True, bn=True, relu=True, kernel_size=3, stride=1, padding=1),
+        )
+        self.feat_stem = nn.Sequential(
+            BasicConv(feat_channels[0], feat_channels[0] // 2, bn=True, relu=True, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(feat_channels[0] // 2, num_groups, kernel_size=1, stride=1, padding=0, bias=False),
+        )
+        self.fuse_stem = BasicConv(num_groups, num_groups, is_3d=True, kernel_size=(1, 5, 5), padding=(0, 2, 2), stride=1)
+        
+        self.eav_agg = ChannelExtensionSimpleExcitiveAttentionHourglassEncoder(num_groups, feat_channels)
+    
+    def forward(self, feat_left: List[torch.Tensor], feat_right: List[torch.Tensor]) -> Tuple[torch.Tensor]:
+        # Compute the pre-spatial refine for the context feature with the largest resolution.
+        match_left = self.global_spatial_refiner(feat_left[0])
+        match_right = self.global_spatial_refiner(feat_right[0])
+
+        # Compute the matching attention for the context feature with the largest resolution.
+        match_left = match_left + self.matching_pos(match_left)
+        match_right = match_right + self.matching_pos(match_right)
+        match_left, match_right = self.global_matching_refiner(match_left.float(), match_right.float())
+
+        # Compute the spatial attention for context features.
+        context_left = self.global_context_refiner(feat_left)
+
+        # Compute the concatenated feature cost volume.
+        cc_volume = build_concat_volume(match_left, match_right, self.max_disp // 4)
+        cc_volume = self.cc_stem(cc_volume)
+        feat_volume = self.feat_stem(context_left[0]).unsqueeze(2)
+        cfc_volume = self.fuse_stem(feat_volume * cc_volume)
+
+        # Aggregate the concatenated feature cost volume by excitive attention mechanism.
+        ea_volume, ea_prob = self.eav_agg(cfc_volume, context_left)
+
+        # Get the initialized disparity.
+        init_disp = disparity_regression(ea_prob, self.max_disp // 4)
+
+        return match_left, match_right, ea_volume, init_disp
+
+
+class ChannelExtensionSimpleExcitiveAttentionCombinedVolume(nn.Module):
+    def __init__(self, channels: int, feat_channels: List[int], max_disp: int, num_groups: int=8):
+        super(ChannelExtensionSimpleExcitiveAttentionCombinedVolume, self).__init__()
+
+        self.max_disp = max_disp
+        self.num_groups = num_groups
+
+        # self.global_spatial_refiner = AdaptiveGlobalRefiner(channels)
+        self.conv = BasicConvIN(channels, channels, kernel_size=3, padding=1, stride=1)
+        self.desc = nn.Conv2d(channels, channels, kernel_size=1, padding=0, stride=1)
+        self.matching_pos = PositionalEmbeddingCosine2D(channels // 2, normalize=True)
+        self.global_matching_refiner = TransformerFeatureRefiner(channels, 1, 4)
+
+        self.global_context_refiner = ChannelExtensionGlobalAttentionFeatureRefiner(feat_channels)
+
+        self.cc_stem = nn.Sequential(
+            BasicConv(channels * 2, channels, is_3d=True, bn=True, relu=True, kernel_size=1, stride=1, padding=0),
+            BasicConv(channels, channels // 2, is_3d=True, bn=True, relu=True, kernel_size=3, stride=1, padding=1),
+            nn.Conv3d(channels // 2, num_groups * 2, kernel_size=3, stride=1, padding=1, bias=False),
+        )
+        # self.comb_stem = nn.Sequential(
+        #     BasicConv(num_groups * 3, num_groups, is_3d=True, bn=True, relu=True, kernel_size=1, stride=1, padding=0),
+        # )
+        
+        self.eav_agg = ChannelExtensionSimpleExcitiveAttentionHourglassEncoder(num_groups * 3, feat_channels)
+    
+    def forward(self, feat_left: List[torch.Tensor], feat_right: List[torch.Tensor]) -> Tuple[torch.Tensor]:
+        # Compute the pre-spatial refine for the context feature with the largest resolution.
+        # match_left = self.global_spatial_refiner(feat_left[0])
+        # match_right = self.global_spatial_refiner(feat_right[0])
+        match_left = self.desc(self.conv(feat_left[0]))
+        match_right = self.desc(self.conv(feat_right[0]))
+
+        # Compute the matching attention for the context feature with the largest resolution.
+        match_left = match_left + self.matching_pos(match_left)
+        match_right = match_right + self.matching_pos(match_right)
+        match_left, match_right = self.global_matching_refiner(match_left.float(), match_right.float())
+
+        # Compute the spatial attention for context features.
+        context_left = self.global_context_refiner(feat_left)
+
+        # Compute the group-wise correlation cost volume.
+        corr_volume = build_gwc_volume(match_left, match_right, self.max_disp // 4, self.num_groups)
+
+        # Compute the concatenated cost volume.
+        cat_volume = build_concat_volume(match_left, match_right, self.max_disp // 4)
+        cat_volume = self.cc_stem(cat_volume)
+
+        # Compute the combined cost volume.
+        combined_volume = torch.cat([corr_volume, cat_volume], dim=1)
+        # combined_volume = self.comb_stem(combined_volume)
+
+        # Aggregate the concatenated feature cost volume by excitive attention mechanism.
+        ea_volume, ea_prob = self.eav_agg(combined_volume, context_left)
+
+        # Get the initialized disparity.
+        init_disp = disparity_regression(ea_prob, self.max_disp // 4)
+
+        return context_left, match_left, match_right, ea_volume, init_disp
 
 
 class CostVolumeSampler:
