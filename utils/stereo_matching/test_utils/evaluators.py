@@ -555,54 +555,6 @@ def evaluate_middlebury(model: nn.Module, root: str, iters: int=32, split: str="
 
 
 @torch.no_grad()
-def evaluate_middlebury(model: nn.Module, root: str, iters: int=32, split: str="F", mixed_prec: bool=False) -> dict:
-    """ Perform evaluation using the Middlebury dataset. """
-    model.eval()
-    aug_params = {}
-    eval_dataset = MiddleburyStereoDataset(aug_params, root, split="MiddEval3", resolution=split)
-
-    out_list, epe_list = [], []
-    for eval_id in tqdm(range(len(eval_dataset))):
-        (_, _, disp_file), left_img, right_img, disp_gt, valid_gt = eval_dataset[eval_id]
-        
-        left_img = left_img[None].cuda()
-        right_img = right_img[None].cuda()
-
-        padder = InputPadder(left_img.shape, divis_by=32)
-        left_img, right_img = padder.pad(left_img, right_img)
-
-        with autocast(enabled=mixed_prec):
-            outputs = model(left_img, right_img, iters=iters, test_mode=True)
-        disp_pr = padder.unpad(outputs[1]).cpu().squeeze(0)
-
-        assert disp_pr.shape == disp_gt.shape, (disp_pr.shape, disp_gt.shape)
-
-        epe = torch.sum((disp_pr - disp_gt) ** 2, dim=0).sqrt()
-        epe_flattened = epe.flatten()
-
-        occ_mask = Image.open(disp_file.replace("disp0GT.pfm", "mask0nocc.png")).convert("L")
-        occ_mask = np.ascontiguousarray(occ_mask, dtype=np.float32).flatten()
-
-        valid = (valid_gt.reshape(-1) >= 0.5) & (occ_mask==255)
-        out = (epe_flattened > 2.0)
-        image_out = out[valid].float().mean().item()
-        image_epe = epe_flattened[valid].mean().item()
-        logging.info(f"Middlebury Iter {eval_id + 1} out of {len(eval_dataset)}. EPE {round(image_epe, 4)} D2 {round(image_out, 4)}.")
-        epe_list.append(image_epe)
-        out_list.append(image_out)
-    
-    epe_list = np.array(epe_list)
-    out_list = np.array(out_list)
-
-    epe = np.mean(epe_list)
-    d2 = 100 * np.mean(out_list)
-
-    print(f"Evaluation Middlebury-{split}: EPE {round(epe, 4)}, D2 {round(d2, 4)}.")
-
-    return {f"middlebury-{split}-epe": epe, f"middlebury-{split}-d2": d2}
-
-
-@torch.no_grad()
 def evaluate_dist_middlebury(model: nn.Module, dataloader: torch.utils.data.DataLoader, device: torch.device, iters: int=32, is_main_process: bool=False) -> tuple:
     """ Perform evaluation using the ETH3D (train) split. """
     model.eval()
