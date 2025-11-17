@@ -1045,7 +1045,7 @@ class MultiBasicEncoder(nn.Module):
                 nn.Conv2d(128, channel[0], 3, padding=1),
                 nn.InstanceNorm2d(channel[0]) if self.norm_fn == "instance" else nn.Identity(),
                 nn.ReLU() if self.norm_fn == "instance" else nn.Identity(),
-            )
+            ) if self.norm_fn == "instance" else nn.Conv2d(128, channel[0], 3, padding=1)
             output_list.append(conv_out)
         self.outputs16 = nn.ModuleList(output_list)
 
