@@ -3,11 +3,9 @@ import logging
 import argparse
 import importlib
 import torch
-import torch.nn as nn
 import torch.distributed as dist
 from torch.utils.data.distributed import DistributedSampler
 from pathlib import Path
-from utils.utils import autocast, InputPadder
 from utils.stereo_matching.test_utils.evaluators import *
 
 
