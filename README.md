@@ -441,7 +441,7 @@ We merge the solid and robust version of GREAT-Stereo into great-stereo folder.
     <th style="border: 2px solid #333; text-align: center; padding: 8px;">0.38</th>
     <th style="border: 2px solid #333; text-align: center; padding: 8px;">3.37</th>
     <th style="border: 2px solid #333; text-align: center; padding: 8px;">3.44</th>
-    <th style="border: 2px solid #333; text-align: center; padding: 8px;">7.98</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">3.67</th>
     <th style="border: 2px solid #333; text-align: center; padding: 8px;">1.10</th>
   </tr>
   <tr>
@@ -449,7 +449,7 @@ We merge the solid and robust version of GREAT-Stereo into great-stereo folder.
     <th style="border: 2px solid #333; text-align: center; padding: 8px;">0.39</th>
     <th style="border: 2px solid #333; text-align: center; padding: 8px;">4.82</th>
     <th style="border: 2px solid #333; text-align: center; padding: 8px;">5.98</th>
-    <th style="border: 2px solid #333; text-align: center; padding: 8px;">9.02</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">4.66</th>
     <th style="border: 2px solid #333; text-align: center; padding: 8px;">9.15</th>
   </tr>
   <tr>
@@ -457,13 +457,23 @@ We merge the solid and robust version of GREAT-Stereo into great-stereo folder.
     <th style="border: 2px solid #333; text-align: center; padding: 8px;">0.36</th>
     <th style="border: 2px solid #333; text-align: center; padding: 8px;">4.31</th>
     <th style="border: 2px solid #333; text-align: center; padding: 8px;">5.48</th>
-    <th style="border: 2px solid #333; text-align: center; padding: 8px;">7.86</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">3.35</th>
     <th style="border: 2px solid #333; text-align: center; padding: 8px;">5.82</th>
+  </tr>
+  <tr>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">GREAT-IGEV-DepthAny* (Ours)</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">0.39</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">4.34</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">5.56</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">3.26</th>
+    <th style="border: 2px solid #333; text-align: center; padding: 8px;">2.48</th>
   </tr>
 </table>
 <p></p>
 
 PS: `Monster*` is the result from the SceneFlow reproduction experiment by using the official code of Monster, see [issue#28](https://github.com/Junda24/MonSter/issues/28) in the official code for more information.
+
+PS: `GREAT-IGEV-DepthAny*` is the result from the SceneFlow experiment after zero-shot selection, according to the [issue#23](https://github.com/Junda24/MonSter/issues/23) in the offcicial code of Monster.
 
 ## :clapper: Demos & Results
 <p align="center"></p>
