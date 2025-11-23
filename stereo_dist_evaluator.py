@@ -212,9 +212,9 @@ if __name__ == "__main__":
     # Obtain the world size (number of GPUs).
     world_size = torch.cuda.device_count()
     if torch.multiprocessing.current_process().name == "MainProcess":
-        print(f"Using {world_size} GPUs for Distributed Data Parallel training.")
+        print(f"Using {world_size} GPUs for Distributed Data Parallel evaluating.")
     
-    # Start the Distributed Data Parallel training.
+    # Start the Distributed Data Parallel evaluating.
     torch.multiprocessing.spawn(
         eval_dist,
         args=(world_size, args),
