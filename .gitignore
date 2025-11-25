@@ -3,5 +3,6 @@
 *.pth
 *.txt
 *.ply
+.vscode
 .ipynb_checkpoints
 experiments
