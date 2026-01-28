@@ -523,7 +523,7 @@ Comparisons with state-of-the-art stereo methods on different public benchmarks 
 conda create -n great python=3.8
 conda activate great
 
-pip install torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu118
+pip install torch torchvision torchaudio xformers==0.0.22.post3+cu118 --index-url https://download.pytorch.org/whl/cu118
 pip install tqdm==4.67.1
 pip install scipy==1.10.1
 pip install opencv-python==4.11.0.86
