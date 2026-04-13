@@ -1,4 +1,7 @@
 # :rocket: GREAT-Stereo (ICCV 2025) :rocket:
+
+Our significant extension version of GREAT, termed as GREATEN, is available at [Paper](https://arxiv.org/pdf/2604.09142), [Code](https://github.com/JarvisLee0423/GREATEN-Stereo).
+
 This repository contains the source code for our paper.
 
 [Paper](https://openaccess.thecvf.com/content/ICCV2025/papers/Li_Global_Regulation_and_Excitation_via_Attention_Tuning_for_Stereo_Matching_ICCV_2025_paper.pdf) | [Paper Page](https://iccv.thecvf.com/virtual/2025/poster/1430) | [YouTube](https://youtu.be/ODBqYQIXTBA)
@@ -25,8 +28,8 @@ Stereo matching achieves significant progress with iterative algorithms like RAF
 - Our method outperforms existing published methods on public leaderboards such as SceneFlow, KITTI, ETH3D, and Middlebury, with especially significant improvements in ill-posed regions.
 
 ## :white_check_mark: To Do List
-- [ ] The real-time version of the GREAT Framwork.
-- [ ] The gpu-memory-friendly implementation of the Matching Attention.
+- [ ] ~~The real-time version of the GREAT Framwork.~~ (Hint: This TODO list will be implemented on our significant extension of GREAT, termed as [GREATEN](https://github.com/JarvisLee0423/GREATEN-Stereo).)
+- [x] The gpu-memory-friendly implementation of the Matching Attention. (Hint: see at [GREATEN](https://github.com/JarvisLee0423/GREATEN-Stereo) repository.)
 - [x] The Foundation-Model-based experiments.
 - [x] The solid and robust version of the GREAT Framwork.
 - [x] The accelerate training and evaluating pipeline. 
