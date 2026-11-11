@@ -620,12 +620,21 @@ python3 save_disp_middlebury.py --name great-igev-stereo --restore_ckpt your/pat
 
 If you find our works useful in your research, please consider citing our paper.
 ```bibtex
+GREAT-Stereo:
 @inproceedings{li2025global,
   title={Global regulation and excitation via attention tuning for stereo matching},
   author={Li, Jiahao and Chen, Xinhong and Jiang, Zhengmin and Zhou, Qian and Li, Yung-Hui and Wang, Jianping},
   booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision},
   pages={25539--25549},
   year={2025}
+}
+
+GREATEN-Stereo:
+@article{li2026geometry,
+  title={Geometry Reinforced Efficient Attention Tuning Equipped with Normals for Robust Stereo Matching},
+  author={Li, Jiahao and Chen, Xinhong and Jiang, Zhengmin and Huang, Cheng and Li, Yung-Hui and Wang, Jianping},
+  journal={arXiv preprint arXiv:2604.09142},
+  year={2026}
 }
 ```
 
